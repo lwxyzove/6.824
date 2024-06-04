@@ -49,7 +49,7 @@ func ProcessMapFunc(t *TaskResponse, mapf func(string, string) []KeyValue) {
 	kvs := mapf(t.MapFile, string(content))
 	nfiles := make([]*os.File, t.ReduceNum)
 	for i := range nfiles {
-		nfiles[i], _ = os.Create(fmt.Sprintf("mr-%d-%d.txt", t.MapId, i))
+		nfiles[i], _ = os.CreateTemp("./", fmt.Sprintf("mr-%d-%d.txt", t.MapId, i))
 	}
 
 	for _, kv := range kvs {
@@ -57,8 +57,9 @@ func ProcessMapFunc(t *TaskResponse, mapf func(string, string) []KeyValue) {
 		json.NewEncoder(nfiles[idx]).Encode(kv)
 	}
 
-	for _, f := range nfiles {
+	for i, f := range nfiles {
 		f.Close()
+		os.Rename(f.Name(), fmt.Sprintf("mr-%d-%d.txt", t.MapId, i))
 	}
 
 	nReq := NotifyDoneRequest{TaskType: TASK_MAP, TaskId: t.MapId}

@@ -67,6 +67,8 @@ func (c *Coordinator) server() {
 // main/mrcoordinator.go calls Done() periodically to find out
 // if the entire job has finished.
 func (c *Coordinator) Done() bool {
+	c.mLock.Lock()
+	defer c.mLock.Unlock()
 	return c.period == DONE
 }
 
@@ -106,7 +108,6 @@ func (c *Coordinator) watch() {
 				}
 			}
 		case REDUCE_PERIOD:
-			c.mLock.Lock()
 			for _, t := range c.rdTasks {
 				if t.done || t.sendt == nil {
 					continue
