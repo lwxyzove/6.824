@@ -174,7 +174,9 @@ func (cfg *config) applier(i int, applyCh chan ApplyMsg) {
 			if m.CommandIndex > 1 && prevok == false {
 				err_msg = fmt.Sprintf("server %v apply out of order %v", i, m.CommandIndex)
 			}
+			cfg.mu.Lock()
 			DPrintf("cfg.logs: %v", cfg.logs)
+			cfg.mu.Unlock()
 			if err_msg != "" {
 				log.Fatalf("apply error: %v", err_msg)
 				cfg.applyErr[i] = err_msg

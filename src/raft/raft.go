@@ -196,10 +196,9 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 	}
 
 	defer rf.persist()
-	if args.Term > rf.term {
-		rf.term = args.Term
-		rf.switchState(Follower)
-	}
+
+	rf.term = args.Term
+	rf.switchState(Follower)
 
 	rf.voteFor = args.CandidateId
 	reply.VoteGranted = true
@@ -261,6 +260,9 @@ func (rf *Raft) ProcessElection() {
 
 			rf.mu.Lock()
 			defer rf.mu.Unlock()
+			if rf.term != args.Term {
+				return
+			}
 			// 如果收到的回复，对方的 term 比你大，那已经不用参选了
 			if reply.Term > rf.term {
 				rf.term = reply.Term
@@ -271,6 +273,7 @@ func (rf *Raft) ProcessElection() {
 					// 获得的选票已经超过一半了
 					// 可能在处理 rpc 请求时，变成了 follower
 					rf.switchState(Leader)
+					DPrintf("server: %d convert to Leader: %v", rf.me, rf.state == Leader)
 					//	rf.StartSendAppendEntries()
 					rf.persist()
 				}
@@ -329,7 +332,7 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 
 	// 4. Append any new entries not already in the log compare from rf.log[args.PrevLogIndex + 1]
 	// Q: replace or keep if command is different?
-	rf.log = append(rf.log[:args.PrevLogIndex+1], args.Log...) // it passed anyway...
+	rf.log = append(rf.log[:args.PrevLogIndex+1], args.Log...)
 	// for i := range args.Log {
 	// 	idx := args.PrevLogIndex + i + 1
 	// 	if idx >= len(rf.log) {
@@ -350,7 +353,7 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 
 	reply.Success = true
 	reply.Term = rf.term
-	DPrintf("server: %d commit args, rf.logs: %v, args.logs: %v", rf.me, rf.log, args.Log)
+	DPrintf("server: %d commit idx: %d, rf.logs: %v, args.logs: %v", rf.me, rf.commitIndex, rf.log, args.Log)
 }
 
 func (rf *Raft) sendAppendEntries(server int, args *AppendEntriesArgs, reply *AppendEntriesReply) bool {
@@ -391,7 +394,7 @@ func (rf *Raft) ProcessAppendEntries() {
 
 			rf.mu.Lock()
 			defer rf.mu.Unlock()
-			if rf.state != Leader {
+			if rf.state != Leader || rf.term != args.Term {
 				return
 			}
 
@@ -409,7 +412,7 @@ func (rf *Raft) ProcessAppendEntries() {
 							cnt++
 						}
 					}
-					if cnt > len(rf.peers)/2 && rf.log[n].Term == rf.term {
+					if 2*cnt > len(rf.peers) && rf.log[n].Term == rf.term {
 						rf.commitIndex = n
 						go rf.applyCommit()
 						break
@@ -456,7 +459,7 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 		index = len(rf.log) - 1
 		rf.nextIndex[rf.me] = index + 1
 		rf.matchIndex[rf.me] = index
-		DPrintf("id: %d, isLeader: %v, term : %d, logs: %v", rf.me, rf.state == Leader, rf.term, rf.log)
+		DPrintf("id: %d, isLeader start: %v, term : %d, logs: %v", rf.me, rf.state == Leader, rf.term, rf.log)
 	}
 	return index, term, isLeader
 }
@@ -488,7 +491,7 @@ func (rf *Raft) ticker() {
 		case <-rf.heartBeat.C:
 			rf.mu.Lock()
 			if rf.state == Leader {
-				go rf.ProcessAppendEntries()
+				rf.ProcessAppendEntries()
 			}
 			rf.mu.Unlock()
 		case <-rf.electTtl.C:
@@ -496,8 +499,8 @@ func (rf *Raft) ticker() {
 			switch rf.state {
 			case Follower, Candidate:
 				rf.switchState(Candidate)
+				rf.ProcessElection()
 				rf.persist()
-				go rf.ProcessElection()
 			}
 			rf.mu.Unlock()
 		}
@@ -572,14 +575,15 @@ func (rf *Raft) applyCommit() {
 	defer rf.mu.Unlock()
 
 	if rf.commitIndex > rf.lastApplied {
+		lastApplied, commitIndex := rf.lastApplied, rf.commitIndex
+		entries := append([]LogEntry{}, rf.log[lastApplied+1:commitIndex+1]...)
+		DPrintf("server: %d, isLeader: %v, applys: %v", rf.me, rf.state == Leader, entries)
 		go func() {
-			entries := append([]LogEntry{}, rf.log[rf.lastApplied+1:rf.commitIndex+1]...)
-			DPrintf("server: %d, isLeader: %v, applys: %v", rf.me, rf.state == Leader, entries)
 			for idx, entry := range entries {
 				msg := ApplyMsg{}
 				msg.CommandValid = true
 				msg.Command = entry.Command
-				msg.CommandIndex = rf.lastApplied + 1 + idx
+				msg.CommandIndex = lastApplied + 1 + idx
 				rf.applyCh <- msg
 			}
 			// do not forget to update lastApplied index
