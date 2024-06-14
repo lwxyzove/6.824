@@ -45,7 +45,7 @@ func min(a, b int) int {
 }
 
 func randElectTtl() time.Duration {
-	ms := 150 + (rand.Int63() % 150)
+	ms := 150 + (rand.Int63() % 300)
 	return time.Duration(ms) * time.Millisecond
 }
 
@@ -103,8 +103,8 @@ type Raft struct {
 	state   State
 	term    int
 	voteFor int
-	voteCnt int
 
+	applyCond *sync.Cond
 	heartBeat *time.Ticker
 	electTtl  *time.Ticker
 }
@@ -187,6 +187,12 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 		return
 	}
 
+	defer rf.persist()
+	if args.Term > rf.term { //never forget to change fxxking term & state, even the refuse this vote
+		rf.term = args.Term
+		rf.switchState(Follower)
+	}
+
 	mLastLogIndex := len(rf.log) - 1
 	if args.LastLogTerm < rf.log[mLastLogIndex].Term ||
 		(args.LastLogTerm == rf.log[mLastLogIndex].Term && args.LastLogIndex < mLastLogIndex) {
@@ -195,11 +201,7 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 		return
 	}
 
-	defer rf.persist()
-
-	rf.term = args.Term
 	rf.switchState(Follower)
-
 	rf.voteFor = args.CandidateId
 	reply.VoteGranted = true
 	reply.Term = rf.term
@@ -239,6 +241,7 @@ func (rf *Raft) sendRequestVote(server int, args *RequestVoteArgs, reply *Reques
 
 func (rf *Raft) ProcessElection() {
 	DPrintf("server: %d start election, cur term: %d, time: %d", rf.me, rf.term, time.Now().UnixMilli())
+	voteCnt := 1
 	for id := range rf.peers {
 		if rf.me == id {
 			continue
@@ -263,19 +266,19 @@ func (rf *Raft) ProcessElection() {
 			if rf.term != args.Term {
 				return
 			}
+			DPrintf("server: %d, term %d got vote reply from server: %d, term: %d, votegranted: %v", rf.me, rf.term, id, reply.Term, reply.VoteGranted)
 			// 如果收到的回复，对方的 term 比你大，那已经不用参选了
 			if reply.Term > rf.term {
 				rf.term = reply.Term
 				rf.switchState(Follower)
 				rf.persist()
 			} else if reply.VoteGranted {
-				if rf.voteCnt++; rf.voteCnt*2 > len(rf.peers) && rf.state == Candidate {
+				if voteCnt++; voteCnt*2 > len(rf.peers) && rf.state == Candidate {
 					// 获得的选票已经超过一半了
 					// 可能在处理 rpc 请求时，变成了 follower
 					rf.switchState(Leader)
-					DPrintf("server: %d convert to Leader: %v", rf.me, rf.state == Leader)
-					//	rf.StartSendAppendEntries()
 					rf.persist()
+					DPrintf("server: %d convert to Leader: %v", rf.me, rf.state == Leader)
 				}
 			}
 		}(id)
@@ -308,9 +311,9 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 		return
 	}
 
+	defer rf.persist()
 	rf.term = args.Term
 	rf.switchState(Follower)
-	defer rf.persist()
 
 	if len(rf.log)-1 < args.PrevLogIndex {
 		reply.Success = false
@@ -348,12 +351,12 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 	//5. If leaderCommit > commitIndex, set commitIndex = min(leaderCommit, index of last new entry)
 	if args.LeaderCommit > rf.commitIndex {
 		rf.commitIndex = min(args.LeaderCommit, len(rf.log)-1)
-		go rf.applyCommit()
+		rf.applyCond.Signal()
 	}
 
 	reply.Success = true
 	reply.Term = rf.term
-	DPrintf("server: %d commit idx: %d, rf.logs: %v, args.logs: %v", rf.me, rf.commitIndex, rf.log, args.Log)
+	DPrintf("server: %d commit idx: %d, rf.logs: %v, args.term: %d, args.logs: %v", rf.me, rf.commitIndex, rf.log, args.Term, args.Log)
 }
 
 func (rf *Raft) sendAppendEntries(server int, args *AppendEntriesArgs, reply *AppendEntriesReply) bool {
@@ -414,7 +417,7 @@ func (rf *Raft) ProcessAppendEntries() {
 					}
 					if 2*cnt > len(rf.peers) && rf.log[n].Term == rf.term {
 						rf.commitIndex = n
-						go rf.applyCommit()
+						rf.applyCond.Signal()
 						break
 					}
 				}
@@ -499,8 +502,8 @@ func (rf *Raft) ticker() {
 			switch rf.state {
 			case Follower, Candidate:
 				rf.switchState(Candidate)
-				rf.ProcessElection()
 				rf.persist()
+				rf.ProcessElection()
 			}
 			rf.mu.Unlock()
 		}
@@ -526,7 +529,6 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.state = Follower
 	rf.term = 0
 	rf.voteFor = -1
-	rf.voteCnt = 0
 	rf.heartBeat = time.NewTicker(100 * time.Millisecond)
 	rf.electTtl = time.NewTicker(randElectTtl())
 
@@ -536,12 +538,13 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.nextIndex = make([]int, len(rf.peers))
 	rf.matchIndex = make([]int, len(rf.peers))
 	rf.applyCh = applyCh
-
+	rf.applyCond = sync.NewCond(&rf.mu)
 	// initialize from state persisted before a crash
 	rf.readPersist(persister.ReadRaftState())
 
 	// start ticker goroutine to start elections
 	go rf.ticker()
+	go rf.applyCommit()
 
 	return rf
 }
@@ -551,11 +554,9 @@ func (rf *Raft) switchState(st State) {
 	switch st {
 	case Follower:
 		rf.voteFor = -1
-		rf.voteCnt = 0
 		rf.electTtl.Reset(randElectTtl())
 	case Candidate:
 		rf.voteFor = rf.me
-		rf.voteCnt = 1
 		rf.term++
 		rf.electTtl.Reset(randElectTtl())
 	case Leader:
@@ -574,24 +575,26 @@ func (rf *Raft) applyCommit() {
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
 
-	if rf.commitIndex > rf.lastApplied {
-		lastApplied, commitIndex := rf.lastApplied, rf.commitIndex
-		entries := append([]LogEntry{}, rf.log[lastApplied+1:commitIndex+1]...)
-		DPrintf("server: %d, isLeader: %v, applys: %v", rf.me, rf.state == Leader, entries)
-		go func() {
-			for idx, entry := range entries {
+	for rf.killed() == false {
+		if rf.commitIndex <= rf.lastApplied {
+			rf.applyCond.Wait()
+		}
+		if rf.commitIndex > rf.lastApplied {
+			entries := rf.log[rf.lastApplied+1 : rf.commitIndex+1]
+			DPrintf("server: %d, isLeader: %v, applys: %v", rf.me, rf.state == Leader, entries)
+
+			for _, entry := range entries {
 				msg := ApplyMsg{}
 				msg.CommandValid = true
 				msg.Command = entry.Command
-				msg.CommandIndex = lastApplied + 1 + idx
+				msg.CommandIndex = rf.lastApplied + 1
+
+				rf.mu.Unlock()
 				rf.applyCh <- msg
+				rf.mu.Lock()
+				rf.lastApplied++
 			}
-			// do not forget to update lastApplied index
-			// this is another goroutine, so protect it with lock
-			rf.mu.Lock()
-			rf.lastApplied += len(entries)
-			rf.mu.Unlock()
-		}()
+		}
 	}
 }
 
