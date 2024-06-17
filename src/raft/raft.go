@@ -179,7 +179,7 @@ type RequestVoteReply struct {
 func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
-
+	//DPrintf("voting!!! server: %d, term: %d, votefor: %d, args.term: %d, args.candidateId: %d", rf.me, rf.term, rf.voteFor, args.Term, args.CandidateId)
 	if args.Term < rf.term ||
 		(args.Term == rf.term && rf.voteFor != -1 && rf.voteFor != args.CandidateId) {
 		reply.Term = rf.term
@@ -247,11 +247,12 @@ func (rf *Raft) ProcessElection() {
 			continue
 		}
 		go func(id int) {
-			args := RequestVoteArgs{CandidateId: rf.me}
+			args := RequestVoteArgs{}
 			reply := RequestVoteReply{}
 
 			rf.mu.Lock()
 			args.Term = rf.term
+			args.CandidateId = rf.me
 			args.LastLogIndex = len(rf.log) - 1
 			args.LastLogTerm = rf.log[args.LastLogIndex].Term
 			rf.mu.Unlock()
@@ -277,7 +278,6 @@ func (rf *Raft) ProcessElection() {
 					// 获得的选票已经超过一半了
 					// 可能在处理 rpc 请求时，变成了 follower
 					rf.switchState(Leader)
-					rf.persist()
 					DPrintf("server: %d convert to Leader: %v", rf.me, rf.state == Leader)
 				}
 			}
@@ -312,8 +312,12 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 	}
 
 	defer rf.persist()
-	rf.term = args.Term
-	rf.switchState(Follower)
+	if args.Term > rf.term {
+		rf.term = args.Term
+		rf.voteFor = -1
+	}
+	rf.state = Follower
+	rf.electTtl.Reset(randElectTtl())
 
 	if len(rf.log)-1 < args.PrevLogIndex {
 		reply.Success = false
@@ -356,7 +360,7 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 
 	reply.Success = true
 	reply.Term = rf.term
-	DPrintf("server: %d commit idx: %d, rf.logs: %v, args.term: %d, args.logs: %v", rf.me, rf.commitIndex, rf.log, args.Term, args.Log)
+	DPrintf("server: %d commit idx: %d, rf.logs: %v, len(rf.logs): %d, args.term: %d, args.logs: %v", rf.me, rf.commitIndex, rf.log, len(rf.log), args.Term, args.Log)
 }
 
 func (rf *Raft) sendAppendEntries(server int, args *AppendEntriesArgs, reply *AppendEntriesReply) bool {
@@ -421,10 +425,11 @@ func (rf *Raft) ProcessAppendEntries() {
 						break
 					}
 				}
-			} else if reply.Term > rf.term { // 如果收到的回复，对方的 term 比你大，那已经不用参选了
+			} else if reply.Term > rf.term { // 如果收到的回复，对方的 term 比你大
 				rf.term = reply.Term
 				rf.switchState(Follower)
 				rf.persist()
+				DPrintf("server: %d, term: %d turn to follower, id: %d, term:%d", rf.me, rf.term, id, reply.Term)
 			} else {
 				rf.nextIndex[id] = reply.ConflictIndex
 				if reply.ConflictTerm != -1 {
@@ -462,7 +467,7 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 		index = len(rf.log) - 1
 		rf.nextIndex[rf.me] = index + 1
 		rf.matchIndex[rf.me] = index
-		DPrintf("id: %d, isLeader start: %v, term : %d, logs: %v", rf.me, rf.state == Leader, rf.term, rf.log)
+		DPrintf("id: %d, isLeader start: %v, term : %d, logs: %v, len(logs): %d", rf.me, rf.state == Leader, rf.term, rf.log, len(rf.log))
 	}
 	return index, term, isLeader
 }
@@ -541,7 +546,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.applyCond = sync.NewCond(&rf.mu)
 	// initialize from state persisted before a crash
 	rf.readPersist(persister.ReadRaftState())
-
+	DPrintf("server: %d started, term: %d, isLeader: %v", rf.me, rf.term, rf.state == Leader)
 	// start ticker goroutine to start elections
 	go rf.ticker()
 	go rf.applyCommit()
