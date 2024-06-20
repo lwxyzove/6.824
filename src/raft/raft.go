@@ -45,7 +45,7 @@ func min(a, b int) int {
 }
 
 func randElectTtl() time.Duration {
-	ms := 150 + (rand.Int63() % 300)
+	ms := 150 + (rand.Int63() % 200)
 	return time.Duration(ms) * time.Millisecond
 }
 
@@ -179,7 +179,7 @@ type RequestVoteReply struct {
 func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
-	//DPrintf("voting!!! server: %d, term: %d, votefor: %d, args.term: %d, args.candidateId: %d", rf.me, rf.term, rf.voteFor, args.Term, args.CandidateId)
+
 	if args.Term < rf.term ||
 		(args.Term == rf.term && rf.voteFor != -1 && rf.voteFor != args.CandidateId) {
 		reply.Term = rf.term
@@ -188,23 +188,21 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 	}
 
 	defer rf.persist()
-	if args.Term > rf.term { //never forget to change fxxking term & state, even the refuse this vote
+	if args.Term > rf.term {
 		rf.term = args.Term
 		rf.switchState(Follower)
 	}
 
-	mLastLogIndex := len(rf.log) - 1
-	if args.LastLogTerm < rf.log[mLastLogIndex].Term ||
-		(args.LastLogTerm == rf.log[mLastLogIndex].Term && args.LastLogIndex < mLastLogIndex) {
-		reply.Term = rf.term
-		reply.VoteGranted = false
-		return
-	}
-
-	rf.switchState(Follower)
-	rf.voteFor = args.CandidateId
-	reply.VoteGranted = true
 	reply.Term = rf.term
+	reply.VoteGranted = false
+
+	mLastLogIndex := len(rf.log) - 1
+	if args.LastLogTerm > rf.log[mLastLogIndex].Term ||
+		(args.LastLogTerm == rf.log[mLastLogIndex].Term && args.LastLogIndex >= mLastLogIndex) {
+		reply.VoteGranted = true
+		rf.switchState(Follower)
+		rf.voteFor = args.CandidateId
+	}
 }
 
 // example code to send a RequestVote RPC to a server.
@@ -338,9 +336,8 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 	}
 
 	// 4. Append any new entries not already in the log compare from rf.log[args.PrevLogIndex + 1]
-	// Q: replace or keep if command is different?
 	rf.log = append(rf.log[:args.PrevLogIndex+1], args.Log...)
-	// for i := range args.Log {
+	//  for i := range args.Log {
 	// 	idx := args.PrevLogIndex + i + 1
 	// 	if idx >= len(rf.log) {
 	// 		rf.log = append(rf.log, args.Log[i])
@@ -360,7 +357,7 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 
 	reply.Success = true
 	reply.Term = rf.term
-	DPrintf("server: %d commit idx: %d, rf.logs: %v, len(rf.logs): %d, args.term: %d, args.logs: %v", rf.me, rf.commitIndex, rf.log, len(rf.log), args.Term, args.Log)
+	DPrintf("server: %d commit idx: %d, args.commit idx: %d, rf.logs: %v, len(rf.logs): %d, args.term: %d, args.logs: %v", rf.me, rf.commitIndex, args.LeaderCommit, entry(rf.log), len(rf.log), args.Term, entry(args.Log))
 }
 
 func (rf *Raft) sendAppendEntries(server int, args *AppendEntriesArgs, reply *AppendEntriesReply) bool {
@@ -395,7 +392,7 @@ func (rf *Raft) ProcessAppendEntries() {
 			rf.mu.Unlock()
 
 			if !rf.sendAppendEntries(id, &args, &reply) {
-				//	DPrintf("server %d append entry failed !", id)
+				DPrintf("server: %d, term: %d call server: %d, failed", args.LeaderId, args.Term, id)
 				return
 			}
 
@@ -412,19 +409,37 @@ func (rf *Raft) ProcessAppendEntries() {
 				// If there exists an N such that N > commitIndex, a majority
 				// of matchIndex[i] ≥ N, and log[N].term == currentTerm:
 				// set commitIndex = N (§5.3, §5.4).
-				for n := len(rf.log) - 1; n > rf.commitIndex; n-- { //Q: or copy and sort then choose mid num ?
+				for n := len(rf.log) - 1; n > rf.commitIndex && rf.log[n].Term == rf.term; n-- {
 					var cnt int
 					for _, matched := range rf.matchIndex {
 						if matched >= n {
 							cnt++
 						}
 					}
-					if 2*cnt > len(rf.peers) && rf.log[n].Term == rf.term {
+					if 2*cnt > len(rf.peers) {
 						rf.commitIndex = n
 						rf.applyCond.Signal()
 						break
 					}
 				}
+				/* Q: or binary search
+				offset := sort.Search(len(rf.log[rf.commitIndex:]), func(i int) bool {
+					var cnt int
+					for _, matched := range rf.matchIndex {
+						if matched >= rf.commitIndex+i {
+							cnt++
+						}
+						if 2*cnt > len(rf.peers) && rf.log[rf.commitIndex+i].Term == rf.term {
+							return false
+						}
+					}
+					return true
+				})
+				if offset > 1 {
+					rf.commitIndex += offset - 1
+					rf.applyCond.Signal()
+				}
+				*/
 			} else if reply.Term > rf.term { // 如果收到的回复，对方的 term 比你大
 				rf.term = reply.Term
 				rf.switchState(Follower)
@@ -467,7 +482,7 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 		index = len(rf.log) - 1
 		rf.nextIndex[rf.me] = index + 1
 		rf.matchIndex[rf.me] = index
-		DPrintf("id: %d, isLeader start: %v, term : %d, logs: %v, len(logs): %d", rf.me, rf.state == Leader, rf.term, rf.log, len(rf.log))
+		DPrintf("id: %d, isLeader command: %v, term : %d, logs: %v, len(logs): %d", rf.me, rf.state == Leader, rf.term, entry(rf.log), len(rf.log))
 	}
 	return index, term, isLeader
 }
@@ -534,7 +549,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.state = Follower
 	rf.term = 0
 	rf.voteFor = -1
-	rf.heartBeat = time.NewTicker(100 * time.Millisecond)
+	rf.heartBeat = time.NewTicker(50 * time.Millisecond)
 	rf.electTtl = time.NewTicker(randElectTtl())
 
 	rf.commitIndex = 0
@@ -566,6 +581,7 @@ func (rf *Raft) switchState(st State) {
 		rf.electTtl.Reset(randElectTtl())
 	case Leader:
 		//		rf.heartBeat.Reset(100 * time.Millisecond)
+		rf.electTtl.Stop()
 		for i := range rf.nextIndex {
 			rf.nextIndex[i] = len(rf.log)
 		}

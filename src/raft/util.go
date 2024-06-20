@@ -10,3 +10,10 @@ func DPrintf(format string, a ...interface{}) {
 		log.Printf(format, a...)
 	}
 }
+
+func entry(logs []LogEntry) []LogEntry {
+	if len(logs) < 10 {
+		return logs
+	}
+	return logs[len(logs)-10:]
+}
