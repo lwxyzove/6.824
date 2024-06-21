@@ -3,7 +3,7 @@ package raft
 import "log"
 
 // Debugging
-const Debug = true
+const Debug = false
 
 func DPrintf(format string, a ...interface{}) {
 	if Debug {
@@ -16,4 +16,17 @@ func entry(logs []LogEntry) []LogEntry {
 		return logs
 	}
 	return logs[len(logs)-10:]
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
