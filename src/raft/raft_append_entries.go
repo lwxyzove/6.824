@@ -75,7 +75,7 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 func (rf *Raft) AppendEntriesRequest(id int) {
 	args := AppendEntriesArgs{}
 	reply := AppendEntriesReply{}
-
+	DPrintf("start append entries, id: %d", id)
 	rf.mu.Lock()
 	if rf.state != Leader {
 		rf.mu.Unlock()
@@ -158,19 +158,21 @@ func (rf *Raft) AppendEntriesRequest(id int) {
 }
 
 func (rf *Raft) ProcessAppendEntries() {
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+
+	if rf.state != Leader {
+		return
+	}
+
 	for id := range rf.peers {
 		if id == rf.me {
 			continue
 		}
-		go func(id int) {
-			rf.mu.Lock()
-			defer rf.mu.Unlock()
-
-			if rf.nextIndex[id] <= rf.lastIncludeIndex {
-				rf.InstallSnapshotRequest(id)
-			} else {
-				rf.AppendEntriesRequest(id)
-			}
-		}(id)
+		if rf.nextIndex[id] <= rf.lastIncludeIndex {
+			go rf.InstallSnapshotRequest(id)
+		} else {
+			go rf.AppendEntriesRequest(id)
+		}
 	}
 }

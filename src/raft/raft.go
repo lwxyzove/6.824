@@ -261,11 +261,7 @@ func (rf *Raft) ticker() {
 		// milliseconds.
 		select {
 		case <-rf.heartBeat.C:
-			rf.mu.Lock()
-			if rf.state == Leader {
-				rf.ProcessAppendEntries()
-			}
-			rf.mu.Unlock()
+			go rf.ProcessAppendEntries()
 		case <-rf.electTtl.C:
 			rf.mu.Lock()
 			switch rf.state {
