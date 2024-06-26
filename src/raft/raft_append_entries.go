@@ -69,13 +69,13 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 
 	reply.Success = true
 	reply.Term = rf.term
-	DPrintf("server: %d commit idx: %d, args.commit idx: %d, rf.logs: %v, len(rf.logs): %d, args.term: %d, args.logs: %v", rf.me, rf.commitIndex, args.LeaderCommit, entry(rf.log), len(rf.log), args.Term, entry(args.Log))
+	DPrintf("server: %d commit idx: %d, args.commit idx: %d, rf.logs: %v, len(rf.logs): %d, args.term: %d, args.logs: %v", rf.me, rf.commitIndex, args.LeaderCommit, rf.log, len(rf.log), args.Term, args.Log)
 }
 
 func (rf *Raft) AppendEntriesRequest(id int) {
 	args := AppendEntriesArgs{}
 	reply := AppendEntriesReply{}
-	DPrintf("start append entries, id: %d", id)
+	//DPrintf("leader: %d start append entries to server: %d", rf.me, id)
 	rf.mu.Lock()
 	if rf.state != Leader {
 		rf.mu.Unlock()
@@ -94,7 +94,7 @@ func (rf *Raft) AppendEntriesRequest(id int) {
 	rf.mu.Unlock()
 
 	if !rf.sendAppendEntries(id, &args, &reply) {
-		DPrintf("server: %d, term: %d call server: %d, failed", args.LeaderId, args.Term, id)
+		//		DPrintf("server: %d, term: %d call server: %d, failed", args.LeaderId, args.Term, id)
 		return
 	}
 

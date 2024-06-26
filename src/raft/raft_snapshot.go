@@ -39,10 +39,14 @@ func (rf *Raft) InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapsho
 		return
 	}
 
-	nLogs := make([]LogEntry, len(rf.log[rf.LogIndex(args.LastIncludedIndex)+1:]))
-	copy(nLogs, rf.log[rf.LogIndex(args.LastIncludedIndex)+1:])
+	DPrintf("server: %d installed snapshot, index: %d, term: %d", rf.me, args.LastIncludedIndex, args.LastIncludedTerm)
 
+	offset := min(rf.LastLogIndex(), args.LastIncludedIndex)
+	nLogs := make([]LogEntry, len(rf.log[rf.LogIndex(offset)+1:]))
+	copy(nLogs, rf.log[rf.LogIndex(offset)+1:])
 	rf.log = nLogs
+	rf.persister.SaveSnapshot(args.Data)
+
 	rf.lastIncludeIndex = args.LastIncludedIndex
 	rf.lastIncludedTerm = args.LastIncludedTerm
 

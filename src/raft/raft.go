@@ -32,7 +32,7 @@ import (
 )
 
 func randElectTtl() time.Duration {
-	ms := 200 + (rand.Int63() % 200)
+	ms := 250 + (rand.Int63() % 200)
 	return time.Duration(ms) * time.Millisecond
 }
 
@@ -108,24 +108,27 @@ func (rf *Raft) LastLogIndex() int {
 }
 
 func (rf *Raft) LastLogTerm() int {
+	if len(rf.log) < 1 {
+		return rf.lastIncludedTerm
+	}
 	return rf.log[len(rf.log)-1].Term
 }
 
 func (rf *Raft) LogIndex(idx int) int {
-	return idx - rf.lastIncludeIndex - 1
+	return idx - rf.BaseLogIndex()
 }
 
 func (rf *Raft) Log(idx int) LogEntry {
-	if idx <= rf.lastIncludeIndex {
+	if idx < rf.BaseLogIndex() {
 		return LogEntry{}
 	}
 	return rf.log[rf.LogIndex(idx)]
 }
 
 func (rf *Raft) LogTerm(idx int) int {
-	if idx <= rf.lastIncludeIndex {
+	if idx < rf.BaseLogIndex() {
 		return -1
-	} else if idx > rf.lastIncludeIndex+len(rf.log) {
+	} else if idx > rf.LastLogIndex() {
 		return rf.me
 	}
 	return rf.log[rf.LogIndex(idx)].Term
@@ -195,15 +198,19 @@ func (rf *Raft) Snapshot(index int, snapshot []byte) {
 	}
 
 	defer rf.persist()
-	nLogs := make([]LogEntry, len(rf.log[rf.LogIndex(rf.lastIncludeIndex)+1:]))
-	copy(nLogs, rf.log[rf.LogIndex(rf.lastIncludeIndex)+1:])
 
-	rf.lastIncludeIndex = index
+	nLogs := make([]LogEntry, len(rf.log[rf.LogIndex(index)+1:]))
+	copy(nLogs, rf.log[rf.LogIndex(index)+1:])
+
 	rf.lastIncludedTerm = rf.LogTerm(index)
+	rf.lastIncludeIndex = index
 	rf.log = nLogs
+	rf.persister.SaveSnapshot(snapshot)
 
 	rf.commitIndex = max(rf.commitIndex, index)
 	rf.lastApplied = max(rf.lastApplied, index)
+
+	DPrintf("server: %d reading snapshot, index: %d, rf.lastApplied: %d, rf.commitIndex: %d, rf.lastIncludeIndex: %d, rf.lastIncludedTerm: %d, len(logs): %d", rf.me, index, rf.lastApplied, rf.commitIndex, rf.lastIncludeIndex, rf.lastIncludedTerm, len(rf.log))
 }
 
 // the service using Raft (e.g. a k/v server) wants to start
@@ -228,10 +235,10 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 	if isLeader {
 		rf.log = append(rf.log, LogEntry{Command: command, Term: rf.term})
 		rf.persist()
-		index = len(rf.log) - 1
+		index = rf.LastLogIndex()
 		rf.nextIndex[rf.me] = index + 1
 		rf.matchIndex[rf.me] = index
-		DPrintf("id: %d, isLeader command: %v, term : %d, logs: %v, len(logs): %d", rf.me, rf.state == Leader, rf.term, entry(rf.log), len(rf.log))
+		DPrintf("id: %d, isLeader command: %v, term : %d, logs: %v, len(logs): %d", rf.me, rf.state == Leader, rf.term, rf.log, len(rf.log))
 	}
 	return index, term, isLeader
 }
@@ -294,7 +301,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.state = Follower
 	rf.term = 0
 	rf.voteFor = -1
-	rf.heartBeat = time.NewTicker(50 * time.Millisecond)
+	rf.heartBeat = time.NewTicker(100 * time.Millisecond)
 	rf.electTtl = time.NewTicker(randElectTtl())
 
 	rf.commitIndex = 0
@@ -308,6 +315,10 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.applyCond = sync.NewCond(&rf.mu)
 	// initialize from state persisted before a crash
 	rf.readPersist(persister.ReadRaftState())
+	if rf.lastIncludeIndex > 0 {
+		rf.lastApplied = rf.lastIncludeIndex
+		rf.commitIndex = rf.lastApplied
+	}
 	DPrintf("server: %d started, term: %d, isLeader: %v", rf.me, rf.term, rf.state == Leader)
 	// start ticker goroutine to start elections
 	go rf.ticker()
@@ -330,10 +341,10 @@ func (rf *Raft) switchState(st State) {
 		//		rf.heartBeat.Reset(100 * time.Millisecond)
 		rf.electTtl.Stop()
 		for i := range rf.nextIndex {
-			rf.nextIndex[i] = len(rf.log)
+			rf.nextIndex[i] = rf.LastLogIndex() + 1
 		}
 		for i := range rf.matchIndex {
-			rf.matchIndex[i] = 0
+			rf.matchIndex[i] = rf.lastIncludeIndex
 		}
 		//		go rf.ProcessAppendEntries()
 	}
@@ -348,20 +359,15 @@ func (rf *Raft) applyCommit() {
 			rf.applyCond.Wait()
 		}
 		if rf.commitIndex > rf.lastApplied {
-			entries := rf.log[rf.LogIndex(rf.lastApplied)+1 : rf.LogIndex(rf.commitIndex)+1]
-			DPrintf("server: %d, isLeader: %v, applys: %v", rf.me, rf.state == Leader, entries)
+			rf.lastApplied++
+			msg := ApplyMsg{}
+			msg.CommandValid = true
+			msg.Command = rf.Log(rf.lastApplied).Command
+			msg.CommandIndex = rf.lastApplied
 
-			for _, entry := range entries {
-				msg := ApplyMsg{}
-				msg.CommandValid = true
-				msg.Command = entry.Command
-				msg.CommandIndex = rf.lastApplied + 1
-
-				rf.mu.Unlock()
-				rf.applyCh <- msg
-				rf.mu.Lock()
-				rf.lastApplied++
-			}
+			rf.mu.Unlock()
+			rf.applyCh <- msg
+			rf.mu.Lock()
 		}
 	}
 }

@@ -11,13 +11,6 @@ func DPrintf(format string, a ...interface{}) {
 	}
 }
 
-func entry(logs []LogEntry) []LogEntry {
-	if len(logs) < 10 {
-		return logs
-	}
-	return logs[len(logs)-10:]
-}
-
 func max(a, b int) int {
 	if a > b {
 		return a
