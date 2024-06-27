@@ -47,8 +47,8 @@ func (rf *Raft) InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapsho
 	rf.log = nLogs
 	rf.persister.SaveSnapshot(args.Data)
 
-	rf.lastIncludeIndex = args.LastIncludedIndex
-	rf.lastIncludedTerm = args.LastIncludedTerm
+	rf.lastIncludeIndex = max(rf.lastIncludeIndex, args.LastIncludedIndex)
+	rf.lastIncludedTerm = max(rf.lastIncludedTerm, args.LastIncludedTerm)
 
 	rf.commitIndex = max(rf.commitIndex, args.LastIncludedIndex)
 	rf.lastApplied = max(rf.lastApplied, args.LastIncludedIndex)

@@ -161,6 +161,7 @@ func (rf *Raft) persist() {
 	raftstate := w.Bytes()
 	snapshot := rf.persister.ReadSnapshot()
 	rf.persister.Save(raftstate, snapshot)
+	DPrintf("server: %d saved rf.lastIncludeIndex: %d, rf.lastIncludedTerm: %d", rf.me, rf.lastIncludeIndex, rf.lastIncludedTerm)
 }
 
 // restore previously persisted state.
@@ -169,6 +170,7 @@ func (rf *Raft) readPersist(data []byte) {
 		return
 	}
 	// Your code here (3C).
+	//	DPrintf("server: %d, decoding msg: %s", rf.me, data)
 	r := bytes.NewBuffer(data)
 	d := labgob.NewDecoder(r)
 	rf.mu.Lock()
@@ -319,7 +321,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 		rf.lastApplied = rf.lastIncludeIndex
 		rf.commitIndex = rf.lastApplied
 	}
-	DPrintf("server: %d started, term: %d, isLeader: %v", rf.me, rf.term, rf.state == Leader)
+	DPrintf("server: %d started, term: %d, isLeader: %v, lastApplied: %d, commited: %d", rf.me, rf.term, rf.state == Leader, rf.lastApplied, rf.commitIndex)
 	// start ticker goroutine to start elections
 	go rf.ticker()
 	go rf.applyCommit()
@@ -332,14 +334,12 @@ func (rf *Raft) switchState(st State) {
 	switch st {
 	case Follower:
 		rf.voteFor = -1
-		rf.electTtl.Reset(randElectTtl())
 	case Candidate:
 		rf.voteFor = rf.me
 		rf.term++
 		rf.electTtl.Reset(randElectTtl())
 	case Leader:
 		//		rf.heartBeat.Reset(100 * time.Millisecond)
-		rf.electTtl.Stop()
 		for i := range rf.nextIndex {
 			rf.nextIndex[i] = rf.LastLogIndex() + 1
 		}
@@ -359,8 +359,8 @@ func (rf *Raft) applyCommit() {
 			rf.applyCond.Wait()
 		}
 		if rf.commitIndex > rf.lastApplied {
-			rf.lastApplied++
 			msg := ApplyMsg{}
+			rf.lastApplied++
 			msg.CommandValid = true
 			msg.Command = rf.Log(rf.lastApplied).Command
 			msg.CommandIndex = rf.lastApplied

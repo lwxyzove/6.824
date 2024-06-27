@@ -81,7 +81,7 @@ func (rf *Raft) AppendEntriesRequest(id int) {
 		rf.mu.Unlock()
 		return
 	}
-	prevLogIndex := max(rf.nextIndex[id]-1, 0)
+	prevLogIndex := max(rf.nextIndex[id]-1, rf.BaseLogIndex()-1)
 	entries := make([]LogEntry, len(rf.log[rf.LogIndex(prevLogIndex)+1:]))
 	copy(entries, rf.log[rf.LogIndex(prevLogIndex)+1:])
 

@@ -51,6 +51,7 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 		reply.VoteGranted = true
 		rf.switchState(Follower)
 		rf.voteFor = args.CandidateId
+		rf.electTtl.Reset(randElectTtl())
 	}
 }
 
