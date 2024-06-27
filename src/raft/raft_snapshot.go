@@ -97,7 +97,8 @@ func (rf *Raft) InstallSnapshotRequest(id int) {
 		rf.switchState(Follower)
 		rf.persist()
 	} else {
-		rf.nextIndex[id] = args.LastIncludedIndex + 1
-		rf.matchIndex[id] = args.LastIncludedIndex
+		rf.matchIndex[id] = max(rf.matchIndex[id], args.LastIncludedIndex)
+		rf.nextIndex[id] = rf.matchIndex[id] + 1
+		//rf.matchIndex[id] = args.LastIncludedIndex
 	}
 }

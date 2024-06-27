@@ -40,7 +40,7 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 	rf.electTtl.Reset(randElectTtl())
 
 	mLastLogIndex := rf.LastLogIndex()
-	if mLastLogIndex < args.PrevLogIndex {
+	if args.PrevLogIndex > mLastLogIndex || args.PrevLogIndex < rf.lastIncludeIndex {
 		reply.Success = false
 		reply.Term = rf.term
 		reply.ConflictTerm = -1
@@ -94,18 +94,18 @@ func (rf *Raft) AppendEntriesRequest(id int) {
 	rf.mu.Unlock()
 
 	if !rf.sendAppendEntries(id, &args, &reply) {
-		//		DPrintf("server: %d, term: %d call server: %d, failed", args.LeaderId, args.Term, id)
 		return
 	}
 
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
+	DPrintf("server: %d, term: %d call server: %d, args.PrevLogIndex: %d, reply.cterm: %d, reply.cindex: %d", rf.me, args.Term, id, args.PrevLogIndex, reply.ConflictTerm, reply.ConflictIndex)
 	if rf.state != Leader || rf.term != args.Term {
 		return
 	}
 
 	if reply.Success {
-		rf.matchIndex[id] = args.PrevLogIndex + len(entries)
+		rf.matchIndex[id] = max(rf.matchIndex[id], args.PrevLogIndex+len(entries))
 		rf.nextIndex[id] = rf.matchIndex[id] + 1
 
 		// If there exists an N such that N > commitIndex, a majority

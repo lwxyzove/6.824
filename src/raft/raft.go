@@ -126,10 +126,10 @@ func (rf *Raft) Log(idx int) LogEntry {
 }
 
 func (rf *Raft) LogTerm(idx int) int {
-	if idx < rf.BaseLogIndex() {
+	if idx < rf.lastIncludeIndex {
 		return -1
-	} else if idx > rf.LastLogIndex() {
-		return rf.me
+	} else if idx == rf.lastIncludeIndex {
+		return rf.lastIncludedTerm
 	}
 	return rf.log[rf.LogIndex(idx)].Term
 }
@@ -238,7 +238,7 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 		index = rf.LastLogIndex()
 		rf.nextIndex[rf.me] = index + 1
 		rf.matchIndex[rf.me] = index
-		DPrintf("id: %d, isLeader command: %v, term : %d, logs: %v, len(logs): %d", rf.me, rf.state == Leader, rf.term, rf.log, len(rf.log))
+		DPrintf("id: %d, isLeader command: %v, term : %d, logs: %v, index: %d", rf.me, rf.state == Leader, rf.term, rf.log, rf.LastLogIndex())
 	}
 	return index, term, isLeader
 }
