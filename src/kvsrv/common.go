@@ -1,12 +1,20 @@
 package kvsrv
 
 // Put or Append
+
+type MSGTYPE int
+
+const (
+	MODIFY MSGTYPE = iota + 1
+	NOTIFY
+)
+
 type PutAppendArgs struct {
 	Key   string
 	Value string
-	// You'll have to add definitions here.
-	// Field names must start with capital letters,
-	// otherwise RPC will break.
+
+	Sequence int64
+	MsgType  MSGTYPE
 }
 
 type PutAppendReply struct {
