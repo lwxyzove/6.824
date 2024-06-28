@@ -87,6 +87,7 @@ type Raft struct {
 	log              []LogEntry
 	lastIncludeIndex int
 	lastIncludedTerm int
+	snapShot         []byte
 
 	applyCh chan ApplyMsg
 
@@ -159,9 +160,9 @@ func (rf *Raft) persist() {
 	e.Encode(rf.lastIncludedTerm)
 	e.Encode(rf.log)
 	raftstate := w.Bytes()
-	snapshot := rf.persister.ReadSnapshot()
+	snapshot := rf.snapShot
 	rf.persister.Save(raftstate, snapshot)
-	DPrintf("server: %d saved rf.lastIncludeIndex: %d, rf.lastIncludedTerm: %d", rf.me, rf.lastIncludeIndex, rf.lastIncludedTerm)
+	DPrintf("server: %d saved rf.lastIncludeIndex: %d, rf.lastIncludedTerm: %d, len(snapShot): %d", rf.me, rf.lastIncludeIndex, rf.lastIncludedTerm, len(rf.snapShot))
 }
 
 // restore previously persisted state.
@@ -180,6 +181,17 @@ func (rf *Raft) readPersist(data []byte) {
 	d.Decode(&rf.lastIncludeIndex)
 	d.Decode(&rf.lastIncludedTerm)
 	d.Decode(&rf.log)
+	//readSnapshot
+
+}
+
+func (rf *Raft) readSnapshot(data []byte) {
+	if data == nil || len(data) < 1 { // bootstrap without any state?
+		return
+	}
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+	rf.snapShot = data
 }
 
 // the service says it has created a snapshot that has
@@ -207,7 +219,7 @@ func (rf *Raft) Snapshot(index int, snapshot []byte) {
 	rf.lastIncludedTerm = rf.LogTerm(index)
 	rf.lastIncludeIndex = index
 	rf.log = nLogs
-	rf.persister.SaveSnapshot(snapshot)
+	rf.snapShot = clone(snapshot)
 
 	rf.commitIndex = max(rf.commitIndex, index)
 	rf.lastApplied = max(rf.lastApplied, index)
@@ -316,11 +328,13 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.applyCh = applyCh
 	rf.applyCond = sync.NewCond(&rf.mu)
 	// initialize from state persisted before a crash
+	rf.readSnapshot(persister.ReadSnapshot())
 	rf.readPersist(persister.ReadRaftState())
 	if rf.lastIncludeIndex > 0 {
 		rf.lastApplied = rf.lastIncludeIndex
 		rf.commitIndex = rf.lastApplied
 	}
+
 	DPrintf("server: %d started, term: %d, isLeader: %v, lastApplied: %d, commited: %d", rf.me, rf.term, rf.state == Leader, rf.lastApplied, rf.commitIndex)
 	// start ticker goroutine to start elections
 	go rf.ticker()
@@ -358,6 +372,7 @@ func (rf *Raft) applyCommit() {
 		if rf.commitIndex <= rf.lastApplied {
 			rf.applyCond.Wait()
 		}
+
 		if rf.commitIndex > rf.lastApplied {
 			msg := ApplyMsg{}
 			rf.lastApplied++
@@ -370,6 +385,19 @@ func (rf *Raft) applyCommit() {
 			rf.mu.Lock()
 		}
 	}
+}
+
+func (rf *Raft) applySnapShot() {
+	rf.mu.Lock()
+
+	applySnapShot := ApplyMsg{}
+	applySnapShot.SnapshotValid = true
+	applySnapShot.Snapshot = rf.persister.ReadSnapshot()
+	applySnapShot.SnapshotIndex = rf.lastIncludeIndex
+	applySnapShot.SnapshotTerm = rf.lastIncludedTerm
+
+	rf.mu.Unlock()
+	rf.applyCh <- applySnapShot
 }
 
 func init() {

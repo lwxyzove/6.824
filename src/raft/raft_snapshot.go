@@ -45,23 +45,15 @@ func (rf *Raft) InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapsho
 	nLogs := make([]LogEntry, len(rf.log[rf.LogIndex(offset)+1:]))
 	copy(nLogs, rf.log[rf.LogIndex(offset)+1:])
 	rf.log = nLogs
-	rf.persister.SaveSnapshot(args.Data)
+	rf.snapShot = args.Data
 
-	rf.lastIncludeIndex = max(rf.lastIncludeIndex, args.LastIncludedIndex)
-	rf.lastIncludedTerm = max(rf.lastIncludedTerm, args.LastIncludedTerm)
+	rf.lastIncludeIndex = args.LastIncludedIndex
+	rf.lastIncludedTerm = args.LastIncludedTerm
 
 	rf.commitIndex = max(rf.commitIndex, args.LastIncludedIndex)
 	rf.lastApplied = max(rf.lastApplied, args.LastIncludedIndex)
 
-	applySnapShot := ApplyMsg{}
-	applySnapShot.SnapshotValid = true
-	applySnapShot.Snapshot = args.Data
-	applySnapShot.SnapshotIndex = rf.lastIncludeIndex
-	applySnapShot.SnapshotTerm = rf.lastIncludedTerm
-
-	rf.mu.Unlock()
-	rf.applyCh <- applySnapShot
-	rf.mu.Lock()
+	go rf.applySnapShot()
 }
 
 func (rf *Raft) InstallSnapshotRequest(id int) {
