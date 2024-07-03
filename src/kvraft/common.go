@@ -1,9 +1,24 @@
 package kvraft
 
+import (
+	"log"
+	"sync"
+)
+
+const Debug = false
+
+func DPrintf(format string, a ...interface{}) (n int, err error) {
+	if Debug {
+		log.Printf(format, a...)
+	}
+	return
+}
+
 const (
 	OK             = "OK"
 	ErrNoKey       = "ErrNoKey"
 	ErrWrongLeader = "ErrWrongLeader"
+	ErrTimeOut     = "ErrTimeOut"
 )
 
 type Err string
@@ -12,9 +27,10 @@ type Err string
 type PutAppendArgs struct {
 	Key   string
 	Value string
-	// You'll have to add definitions here.
-	// Field names must start with capital letters,
-	// otherwise RPC will break.
+
+	OpType     string
+	ClientId   int64
+	OpSequence int64
 }
 
 type PutAppendReply struct {
@@ -23,10 +39,25 @@ type PutAppendReply struct {
 
 type GetArgs struct {
 	Key string
-	// You'll have to add definitions here.
+
+	ClientId   int64
+	OpSequence int64
 }
 
 type GetReply struct {
 	Err   Err
 	Value string
+}
+
+func WithLock(l sync.Locker, f func()) {
+	l.Lock()
+	defer l.Unlock()
+	f()
+}
+
+func maxI64(a, b int64) int64 {
+	if a > b {
+		return a
+	}
+	return b
 }

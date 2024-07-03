@@ -182,7 +182,6 @@ func (rf *Raft) readPersist(data []byte) {
 	d.Decode(&rf.lastIncludedTerm)
 	d.Decode(&rf.log)
 	//readSnapshot
-
 }
 
 func (rf *Raft) readSnapshot(data []byte) {
@@ -253,6 +252,7 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 		rf.nextIndex[rf.me] = index + 1
 		rf.matchIndex[rf.me] = index
 		DPrintf("id: %d, isLeader command: %v, term : %d, logs: %v, index: %d", rf.me, rf.state == Leader, rf.term, rf.log, rf.LastLogIndex())
+		go rf.ProcessAppendEntries()
 	}
 	return index, term, isLeader
 }

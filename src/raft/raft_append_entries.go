@@ -59,7 +59,18 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 	}
 
 	// 4. Append any new entries not already in the log compare from rf.log[args.PrevLogIndex + 1]
-	rf.log = append(rf.log[:rf.LogIndex(args.PrevLogIndex)+1], args.Log...)
+	//rf.log = append(rf.log[:rf.LogIndex(args.PrevLogIndex)+1], args.Log...)  //worked when not Concurrent appendEntries (only when loop)
+	for i := range args.Log { // loop + start
+		idx := args.PrevLogIndex + i + 1
+		if idx > rf.LastLogIndex() {
+			rf.log = append(rf.log, args.Log[i])
+		} else {
+			if rf.LogTerm(idx) != args.Log[i].Term {
+				rf.log = rf.log[:rf.LogIndex(idx)]
+				rf.log = append(rf.log, args.Log[i])
+			}
+		}
+	}
 
 	//5. If leaderCommit > commitIndex, set commitIndex = min(leaderCommit, index of last new entry)
 	if args.LeaderCommit > rf.commitIndex {
