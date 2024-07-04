@@ -51,9 +51,8 @@ func (rf *Raft) InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapsho
 	rf.lastIncludedTerm = args.LastIncludedTerm
 
 	rf.commitIndex = max(rf.commitIndex, args.LastIncludedIndex)
-	rf.lastApplied = max(rf.lastApplied, args.LastIncludedIndex)
 
-	go rf.applySnapShot()
+	rf.applyCond.Signal()
 }
 
 func (rf *Raft) InstallSnapshotRequest(id int) {

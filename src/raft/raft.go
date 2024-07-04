@@ -365,39 +365,28 @@ func (rf *Raft) switchState(st State) {
 }
 
 func (rf *Raft) applyCommit() {
-	rf.mu.Lock()
-	defer rf.mu.Unlock()
 
 	for rf.killed() == false {
+		rf.mu.Lock()
 		if rf.commitIndex <= rf.lastApplied {
 			rf.applyCond.Wait()
 		}
-
-		if rf.commitIndex > rf.lastApplied {
-			msg := ApplyMsg{}
+		msg := ApplyMsg{}
+		if rf.lastApplied < rf.lastIncludeIndex {
+			msg.SnapshotValid = true
+			msg.Snapshot = rf.persister.ReadSnapshot()
+			msg.SnapshotIndex = rf.lastIncludeIndex
+			msg.SnapshotTerm = rf.lastIncludedTerm
+			rf.lastApplied = rf.lastIncludeIndex
+		} else if rf.commitIndex > rf.lastApplied {
 			rf.lastApplied++
 			msg.CommandValid = true
 			msg.Command = rf.Log(rf.lastApplied).Command
 			msg.CommandIndex = rf.lastApplied
-
-			rf.mu.Unlock()
-			rf.applyCh <- msg
-			rf.mu.Lock()
 		}
+		rf.mu.Unlock()
+		rf.applyCh <- msg
 	}
-}
-
-func (rf *Raft) applySnapShot() {
-	rf.mu.Lock()
-
-	applySnapShot := ApplyMsg{}
-	applySnapShot.SnapshotValid = true
-	applySnapShot.Snapshot = rf.persister.ReadSnapshot()
-	applySnapShot.SnapshotIndex = rf.lastIncludeIndex
-	applySnapShot.SnapshotTerm = rf.lastIncludedTerm
-
-	rf.mu.Unlock()
-	rf.applyCh <- applySnapShot
 }
 
 func init() {
