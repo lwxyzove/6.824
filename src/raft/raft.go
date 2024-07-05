@@ -96,8 +96,8 @@ type Raft struct {
 	voteFor int
 
 	applyCond *sync.Cond
-	heartBeat *time.Ticker
-	electTtl  *time.Ticker
+	eChan     chan struct{}
+	hChan     chan struct{}
 }
 
 func (rf *Raft) BaseLogIndex() int {
@@ -251,8 +251,8 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 		index = rf.LastLogIndex()
 		rf.nextIndex[rf.me] = index + 1
 		rf.matchIndex[rf.me] = index
+		rf.activeHeartBeat()
 		DPrintf("id: %d, isLeader command: %v, term : %d, logs: %v, index: %d", rf.me, rf.state == Leader, rf.term, rf.log, rf.LastLogIndex())
-		go rf.ProcessAppendEntries()
 	}
 	return index, term, isLeader
 }
@@ -278,20 +278,20 @@ func (rf *Raft) killed() bool {
 
 func (rf *Raft) ticker() {
 	for rf.killed() == false {
-		// pause for a random amount of time between 50 and 350
-		// milliseconds.
 		select {
-		case <-rf.heartBeat.C:
-			go rf.ProcessAppendEntries()
-		case <-rf.electTtl.C:
-			rf.mu.Lock()
-			switch rf.state {
-			case Follower, Candidate:
-				rf.switchState(Candidate)
-				rf.persist()
-				rf.ProcessElection()
-			}
-			rf.mu.Unlock()
+		case <-rf.hChan:
+		case <-time.After(100 * time.Millisecond):
+		}
+		go rf.ProcessAppendEntries()
+	}
+}
+
+func (rf *Raft) voteTicker() {
+	for rf.killed() == false {
+		select {
+		case <-rf.eChan:
+		case <-time.After(randElectTtl()):
+			go rf.ProcessElection()
 		}
 	}
 }
@@ -315,8 +315,8 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.state = Follower
 	rf.term = 0
 	rf.voteFor = -1
-	rf.heartBeat = time.NewTicker(100 * time.Millisecond)
-	rf.electTtl = time.NewTicker(randElectTtl())
+	rf.hChan = make(chan struct{})
+	rf.eChan = make(chan struct{})
 
 	rf.commitIndex = 0
 	rf.lastApplied = 0
@@ -338,6 +338,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	DPrintf("server: %d started, term: %d, isLeader: %v, lastApplied: %d, commited: %d", rf.me, rf.term, rf.state == Leader, rf.lastApplied, rf.commitIndex)
 	// start ticker goroutine to start elections
 	go rf.ticker()
+	go rf.voteTicker()
 	go rf.applyCommit()
 
 	return rf
@@ -351,16 +352,31 @@ func (rf *Raft) switchState(st State) {
 	case Candidate:
 		rf.voteFor = rf.me
 		rf.term++
-		rf.electTtl.Reset(randElectTtl())
 	case Leader:
-		//		rf.heartBeat.Reset(100 * time.Millisecond)
 		for i := range rf.nextIndex {
 			rf.nextIndex[i] = rf.LastLogIndex() + 1
 		}
 		for i := range rf.matchIndex {
 			rf.matchIndex[i] = rf.lastIncludeIndex
 		}
-		//		go rf.ProcessAppendEntries()
+	}
+}
+
+func (rf *Raft) resetElectionTimer() {
+	if !rf.killed() {
+		select {
+		case rf.eChan <- struct{}{}:
+		default: // in case rf.killed
+		}
+	}
+}
+
+func (rf *Raft) activeHeartBeat() {
+	if !rf.killed() {
+		select {
+		case rf.hChan <- struct{}{}:
+		default: // in case rf.killed
+		}
 	}
 }
 

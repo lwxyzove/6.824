@@ -37,7 +37,7 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 		rf.voteFor = -1
 	}
 	rf.state = Follower
-	rf.electTtl.Reset(randElectTtl())
+	rf.resetElectionTimer()
 
 	mLastLogIndex := rf.LastLogIndex()
 	if args.PrevLogIndex > mLastLogIndex || args.PrevLogIndex < rf.lastIncludeIndex {

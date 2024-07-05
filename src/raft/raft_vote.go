@@ -51,12 +51,21 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 		reply.VoteGranted = true
 		rf.switchState(Follower)
 		rf.voteFor = args.CandidateId
-		rf.electTtl.Reset(randElectTtl())
+		rf.resetElectionTimer()
 	}
 }
 
 func (rf *Raft) ProcessElection() {
+	rf.mu.Lock()
+	if rf.state == Leader {
+		rf.mu.Unlock()
+		return
+	}
+	rf.switchState(Candidate)
+	rf.persist()
 	DPrintf("server: %d start election, cur term: %d, time: %d", rf.me, rf.term, time.Now().UnixMilli())
+	rf.mu.Unlock()
+
 	voteCnt := 1
 	for id := range rf.peers {
 		if rf.me == id {

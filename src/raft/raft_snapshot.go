@@ -32,7 +32,7 @@ func (rf *Raft) InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapsho
 		rf.voteFor = -1
 	}
 	rf.state = Follower
-	rf.electTtl.Reset(randElectTtl())
+	rf.resetElectionTimer()
 
 	reply.Term = rf.term
 	if rf.lastIncludeIndex > args.LastIncludedIndex {
