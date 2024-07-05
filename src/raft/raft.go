@@ -296,6 +296,24 @@ func (rf *Raft) voteTicker() {
 	}
 }
 
+func (rf *Raft) resetElectionTimer() {
+	if !rf.killed() {
+		select {
+		case rf.eChan <- struct{}{}:
+		default: // in case rf.killed
+		}
+	}
+}
+
+func (rf *Raft) activeHeartBeat() {
+	if !rf.killed() {
+		select {
+		case rf.hChan <- struct{}{}:
+		default: // in case rf.killed
+		}
+	}
+}
+
 // the service or tester wants to create a Raft server. the ports
 // of all the Raft servers (including this one) are in peers[]. this
 // server's port is peers[me]. all the servers' peers[] arrays
@@ -358,24 +376,6 @@ func (rf *Raft) switchState(st State) {
 		}
 		for i := range rf.matchIndex {
 			rf.matchIndex[i] = rf.lastIncludeIndex
-		}
-	}
-}
-
-func (rf *Raft) resetElectionTimer() {
-	if !rf.killed() {
-		select {
-		case rf.eChan <- struct{}{}:
-		default: // in case rf.killed
-		}
-	}
-}
-
-func (rf *Raft) activeHeartBeat() {
-	if !rf.killed() {
-		select {
-		case rf.hChan <- struct{}{}:
-		default: // in case rf.killed
 		}
 	}
 }

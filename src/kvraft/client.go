@@ -13,7 +13,7 @@ type Clerk struct {
 	// You will have to modify this struct.
 	cid         int64
 	knownLeader int
-	opSequence  int64
+	opSequence  int
 }
 
 func nrand() int64 {

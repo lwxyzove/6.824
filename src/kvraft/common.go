@@ -21,6 +21,12 @@ const (
 	ErrTimeOut     = "ErrTimeOut"
 )
 
+const (
+	OpGet    = "Get"
+	OpPut    = "Put"
+	OpAppend = "Append"
+)
+
 type Err string
 
 // Put or Append
@@ -30,7 +36,7 @@ type PutAppendArgs struct {
 
 	OpType     string
 	ClientId   int64
-	OpSequence int64
+	OpSequence int
 }
 
 type PutAppendReply struct {
@@ -41,7 +47,7 @@ type GetArgs struct {
 	Key string
 
 	ClientId   int64
-	OpSequence int64
+	OpSequence int
 }
 
 type GetReply struct {
@@ -56,6 +62,12 @@ func WithLock(l sync.Locker, f func()) {
 }
 
 func maxI64(a, b int64) int64 {
+	if a > b {
+		return a
+	}
+	return b
+}
+func max(a, b int) int {
 	if a > b {
 		return a
 	}
