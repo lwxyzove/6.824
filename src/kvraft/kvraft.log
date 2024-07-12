@@ -1,0 +1,100 @@
+=== RUN   TestBasic4A
+Test: one client (4A) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  15.0  5 26395 4585
+--- PASS: TestBasic4A (15.05s)
+=== RUN   TestSpeed4A
+Test: ops complete fast enough (4A) ...
+  ... Passed --   1.2  3  5877    0
+--- PASS: TestSpeed4A (1.19s)
+=== RUN   TestConcurrent4A
+Test: many clients (4A) ...
+  ... Passed --  15.1  5 40647 5088
+--- PASS: TestConcurrent4A (15.13s)
+=== RUN   TestUnreliable4A
+Test: unreliable net, many clients (4A) ...
+  ... Passed --  16.1  5 11615 1826
+--- PASS: TestUnreliable4A (16.10s)
+=== RUN   TestUnreliableOneKey4A
+Test: concurrent append to same key, unreliable (4A) ...
+  ... Passed --   0.8  3   212   52
+--- PASS: TestUnreliableOneKey4A (0.77s)
+=== RUN   TestOnePartition4A
+Test: progress in majority (4A) ...
+  ... Passed --   0.3  5    31    2
+Test: no progress in minority (4A) ...
+  ... Passed --   1.0  5   127    3
+Test: completion after heal (4A) ...
+  ... Passed --   1.0  5  2033    3
+--- PASS: TestOnePartition4A (2.57s)
+=== RUN   TestManyPartitionsOneClient4A
+Test: partitions, one client (4A) ...
+  ... Passed --  22.7  5 26733 4398
+--- PASS: TestManyPartitionsOneClient4A (22.70s)
+=== RUN   TestManyPartitionsManyClients4A
+Test: partitions, many clients (4A) ...
+  ... Passed --  22.7  5 47542 5505
+--- PASS: TestManyPartitionsManyClients4A (22.70s)
+=== RUN   TestPersistOneClient4A
+Test: restarts, one client (4A) ...
+  ... Passed --  19.5  5 34916 4503
+--- PASS: TestPersistOneClient4A (19.46s)
+=== RUN   TestPersistConcurrent4A
+Test: restarts, many clients (4A) ...
+  ... Passed --  19.5  5 78035 5001
+--- PASS: TestPersistConcurrent4A (19.46s)
+=== RUN   TestPersistConcurrentUnreliable4A
+Test: unreliable net, restarts, many clients (4A) ...
+  ... Passed --  20.2  5 12425 1842
+--- PASS: TestPersistConcurrentUnreliable4A (20.19s)
+=== RUN   TestPersistPartition4A
+Test: restarts, partitions, many clients (4A) ...
+  ... Passed --  26.6  5 65289 5726
+--- PASS: TestPersistPartition4A (26.55s)
+=== RUN   TestPersistPartitionUnreliable4A
+Test: unreliable net, restarts, partitions, many clients (4A) ...
+  ... Passed --  27.2  5 10205 1245
+--- PASS: TestPersistPartitionUnreliable4A (27.23s)
+=== RUN   TestPersistPartitionUnreliableLinearizable4A
+Test: unreliable net, restarts, partitions, random keys, many clients (4A) ...
+  ... Passed --  29.6  7 31986 2944
+--- PASS: TestPersistPartitionUnreliableLinearizable4A (29.55s)
+=== RUN   TestSnapshotRPC4B
+Test: InstallSnapshot RPC (4B) ...
+  ... Passed --   2.3  3  3860   63
+--- PASS: TestSnapshotRPC4B (2.34s)
+=== RUN   TestSnapshotSize4B
+Test: snapshot size is reasonable (4B) ...
+  ... Passed --   0.6  3  7556  800
+--- PASS: TestSnapshotSize4B (0.61s)
+=== RUN   TestSpeed4B
+Test: ops complete fast enough (4B) ...
+  ... Passed --   0.5  3  6736    0
+--- PASS: TestSpeed4B (0.52s)
+=== RUN   TestSnapshotRecover4B
+Test: restarts, snapshots, one client (4B) ...
+  ... Passed --  20.4  5 212168 40016
+--- PASS: TestSnapshotRecover4B (20.43s)
+=== RUN   TestSnapshotRecoverManyClients4B
+Test: restarts, snapshots, many clients (4B) ...
+  ... Passed --  19.9  5 266351 44332
+--- PASS: TestSnapshotRecoverManyClients4B (19.87s)
+=== RUN   TestSnapshotUnreliable4B
+Test: unreliable net, snapshots, many clients (4B) ...
+  ... Passed --  16.0  5 11546 1782
+--- PASS: TestSnapshotUnreliable4B (16.03s)
+=== RUN   TestSnapshotUnreliableRecover4B
+Test: unreliable net, restarts, snapshots, many clients (4B) ...
+  ... Passed --  20.3  5 12369 1826
+--- PASS: TestSnapshotUnreliableRecover4B (20.32s)
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+panic: runtime error: slice bounds out of range [15:13]
+
+goroutine 2503190 [running]:
+6.5840/raft.(*Raft).AppendEntriesRequest(0xc0085d0e10, 0x3)
+	/home/yonio/go/code/6.5840/src/raft/raft_append_entries.go:96 +0x5f8
+created by 6.5840/raft.(*Raft).ProcessAppendEntries
+	/home/yonio/go/code/6.5840/src/raft/raft_append_entries.go:186 +0x175
+exit status 2
+FAIL	6.5840/kvraft	345.081s

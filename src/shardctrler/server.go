@@ -180,7 +180,7 @@ func (sc *ShardCtrler) Query(args *QueryArgs, reply *QueryReply) {
 	case <-rc:
 		reply.Err = OK
 		sc.mu.Lock()
-		if args.Num == -1 {
+		if args.Num == -1 || args.Num > len(sc.configs)-1 {
 			reply.Config = sc.configs[len(sc.configs)-1]
 		} else {
 			reply.Config = sc.configs[args.Num]

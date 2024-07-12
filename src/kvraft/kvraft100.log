@@ -1,0 +1,700 @@
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  26.8  5 10420 1458
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (26.83s)
+PASS
+ok  	6.5840/kvraft	26.830s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  26.9  5  7947  946
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (26.86s)
+PASS
+ok  	6.5840/kvraft	26.857s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.1  5  8093  955
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.10s)
+PASS
+ok  	6.5840/kvraft	27.100s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.3  5  9554 1242
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.32s)
+PASS
+ok  	6.5840/kvraft	27.323s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.2  5  9699 1238
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.21s)
+PASS
+ok  	6.5840/kvraft	27.211s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.1  5  8982 1148
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.12s)
+PASS
+ok  	6.5840/kvraft	27.120s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.3  5  9561 1221
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.29s)
+PASS
+ok  	6.5840/kvraft	27.295s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  26.7  5  8892 1155
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (26.75s)
+PASS
+ok  	6.5840/kvraft	26.753s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.1  5  9822 1171
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.12s)
+PASS
+ok  	6.5840/kvraft	27.123s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.8  5 10297 1409
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.76s)
+PASS
+ok  	6.5840/kvraft	27.765s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.1  5 11124 1483
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.12s)
+PASS
+ok  	6.5840/kvraft	27.122s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.5  5  8177  989
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.53s)
+PASS
+ok  	6.5840/kvraft	27.537s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.0  5  9682 1288
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.01s)
+PASS
+ok  	6.5840/kvraft	27.017s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.0  5  8159  979
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.04s)
+PASS
+ok  	6.5840/kvraft	27.041s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.0  5 11227 1562
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.04s)
+PASS
+ok  	6.5840/kvraft	27.039s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.6  5 10194 1378
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.63s)
+PASS
+ok  	6.5840/kvraft	27.632s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.9  5  9420 1123
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.91s)
+PASS
+ok  	6.5840/kvraft	27.916s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.1  5  7689  751
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.14s)
+PASS
+ok  	6.5840/kvraft	27.141s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.3  5 10140 1359
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.34s)
+PASS
+ok  	6.5840/kvraft	27.340s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.3  5 10870 1504
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.35s)
+PASS
+ok  	6.5840/kvraft	27.348s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.4  5 10443 1290
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.42s)
+PASS
+ok  	6.5840/kvraft	27.421s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.8  5  9748 1288
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.83s)
+PASS
+ok  	6.5840/kvraft	27.829s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.6  5  8719 1046
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.57s)
+PASS
+ok  	6.5840/kvraft	27.575s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.7  5 10217 1358
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.65s)
+PASS
+ok  	6.5840/kvraft	27.658s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.2  5 10222 1374
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.20s)
+PASS
+ok  	6.5840/kvraft	27.199s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.2  5 10863 1444
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.23s)
+PASS
+ok  	6.5840/kvraft	27.234s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.5  5  9115 1155
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.48s)
+PASS
+ok  	6.5840/kvraft	27.484s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.1  5  9194 1197
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.07s)
+PASS
+ok  	6.5840/kvraft	27.069s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.5  5  9242 1191
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.48s)
+PASS
+ok  	6.5840/kvraft	27.487s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  26.9  5 10723 1452
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (26.93s)
+PASS
+ok  	6.5840/kvraft	26.938s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.3  5 11295 1511
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.26s)
+PASS
+ok  	6.5840/kvraft	27.260s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.4  5 11723 1617
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.43s)
+PASS
+ok  	6.5840/kvraft	27.432s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.5  5  9463 1178
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.46s)
+PASS
+ok  	6.5840/kvraft	27.459s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.4  5 11857 1668
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.38s)
+PASS
+ok  	6.5840/kvraft	27.382s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.1  5 10684 1421
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.06s)
+PASS
+ok  	6.5840/kvraft	27.060s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  26.9  5  8295  967
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (26.95s)
+PASS
+ok  	6.5840/kvraft	26.953s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.3  5  9256 1151
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.29s)
+PASS
+ok  	6.5840/kvraft	27.293s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.3  5  9781 1241
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.35s)
+PASS
+ok  	6.5840/kvraft	27.351s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  26.9  5  9338 1166
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (26.92s)
+PASS
+ok  	6.5840/kvraft	26.921s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.5  5 10586 1460
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.52s)
+PASS
+ok  	6.5840/kvraft	27.520s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.0  5 10107 1331
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (26.98s)
+PASS
+ok  	6.5840/kvraft	26.985s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.7  5  9470 1212
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.71s)
+PASS
+ok  	6.5840/kvraft	27.714s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.4  5  8928 1080
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.36s)
+PASS
+ok  	6.5840/kvraft	27.359s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.0  5 10075 1373
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.04s)
+PASS
+ok  	6.5840/kvraft	27.044s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  26.9  5  9881 1310
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (26.89s)
+PASS
+ok  	6.5840/kvraft	26.896s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.4  5  9901 1233
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.44s)
+PASS
+ok  	6.5840/kvraft	27.445s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.4  5  9661 1274
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.37s)
+PASS
+ok  	6.5840/kvraft	27.377s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.1  5 10368 1335
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.12s)
+PASS
+ok  	6.5840/kvraft	27.123s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  28.2  5  9063 1161
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (28.16s)
+PASS
+ok  	6.5840/kvraft	28.165s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.3  5  9871 1307
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.29s)
+PASS
+ok  	6.5840/kvraft	27.293s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.4  5  9618 1200
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.41s)
+PASS
+ok  	6.5840/kvraft	27.415s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.6  5  8937 1050
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.57s)
+PASS
+ok  	6.5840/kvraft	27.574s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.9  5  7815  870
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.88s)
+PASS
+ok  	6.5840/kvraft	27.886s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.3  5 10227 1251
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.28s)
+PASS
+ok  	6.5840/kvraft	27.279s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.8  5 10338 1433
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.79s)
+PASS
+ok  	6.5840/kvraft	27.788s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  26.9  5  9497 1233
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (26.87s)
+PASS
+ok  	6.5840/kvraft	26.870s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  26.9  5 10282 1323
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (26.89s)
+PASS
+ok  	6.5840/kvraft	26.897s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.0  5  9760 1257
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (26.97s)
+PASS
+ok  	6.5840/kvraft	26.970s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  26.7  5 10538 1409
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (26.70s)
+PASS
+ok  	6.5840/kvraft	26.702s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.3  5  9466 1257
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.31s)
+PASS
+ok  	6.5840/kvraft	27.315s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.1  5 11037 1536
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.15s)
+PASS
+ok  	6.5840/kvraft	27.152s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.5  5  9784 1205
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.46s)
+PASS
+ok  	6.5840/kvraft	27.465s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.9  5  9654 1176
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.87s)
+PASS
+ok  	6.5840/kvraft	27.877s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.9  5 10715 1463
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.85s)
+PASS
+ok  	6.5840/kvraft	27.858s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.0  5 10010 1335
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (26.97s)
+PASS
+ok  	6.5840/kvraft	26.969s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.1  5  9655 1239
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.07s)
+PASS
+ok  	6.5840/kvraft	27.077s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.0  5  7782  909
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (26.98s)
+PASS
+ok  	6.5840/kvraft	26.978s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.7  5 11469 1618
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.66s)
+PASS
+ok  	6.5840/kvraft	27.665s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.3  5 10412 1283
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.26s)
+PASS
+ok  	6.5840/kvraft	27.258s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.3  5  8851 1127
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.26s)
+PASS
+ok  	6.5840/kvraft	27.263s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  26.9  5 10946 1481
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (26.87s)
+PASS
+ok  	6.5840/kvraft	26.872s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.0  5 10032 1151
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (26.98s)
+PASS
+ok  	6.5840/kvraft	26.984s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.3  5 10877 1488
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.29s)
+PASS
+ok  	6.5840/kvraft	27.295s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.4  5 10626 1352
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.44s)
+PASS
+ok  	6.5840/kvraft	27.445s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.2  5  9843 1293
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.22s)
+PASS
+ok  	6.5840/kvraft	27.228s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.4  5  9205 1076
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.42s)
+PASS
+ok  	6.5840/kvraft	27.424s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.3  5  9653 1253
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.33s)
+PASS
+ok  	6.5840/kvraft	27.332s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.6  5 11370 1545
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.55s)
+PASS
+ok  	6.5840/kvraft	27.558s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  26.8  5 10448 1406
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (26.85s)
+PASS
+ok  	6.5840/kvraft	26.848s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.0  5 10420 1402
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.04s)
+PASS
+ok  	6.5840/kvraft	27.041s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.2  5  9974 1291
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.20s)
+PASS
+ok  	6.5840/kvraft	27.207s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  26.9  5  9906 1196
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (26.87s)
+PASS
+ok  	6.5840/kvraft	26.874s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.5  5  9563 1170
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.46s)
+PASS
+ok  	6.5840/kvraft	27.467s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.0  5 11218 1513
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (26.98s)
+PASS
+ok  	6.5840/kvraft	26.983s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.6  5  9442 1128
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.56s)
+PASS
+ok  	6.5840/kvraft	27.567s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  26.8  5  9207 1103
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (26.80s)
+PASS
+ok  	6.5840/kvraft	26.805s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.2  5 10761 1486
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.15s)
+PASS
+ok  	6.5840/kvraft	27.155s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.0  5 10474 1432
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (26.97s)
+PASS
+ok  	6.5840/kvraft	26.972s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.1  5  8967 1108
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.13s)
+PASS
+ok  	6.5840/kvraft	27.137s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  26.8  5  9798 1296
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (26.82s)
+PASS
+ok  	6.5840/kvraft	26.827s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  26.8  5  9713 1234
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (26.78s)
+PASS
+ok  	6.5840/kvraft	26.787s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.0  5 10663 1330
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (26.97s)
+PASS
+ok  	6.5840/kvraft	26.968s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.0  5  8959 1142
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (26.98s)
+PASS
+ok  	6.5840/kvraft	26.987s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.1  5  9729 1274
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.12s)
+PASS
+ok  	6.5840/kvraft	27.119s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.7  5 10223 1321
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.71s)
+PASS
+ok  	6.5840/kvraft	27.711s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.3  5  9227 1057
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.30s)
+PASS
+ok  	6.5840/kvraft	27.304s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.0  5  9475 1249
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.01s)
+PASS
+ok  	6.5840/kvraft	27.016s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.6  5 10785 1420
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.59s)
+PASS
+ok  	6.5840/kvraft	27.589s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.0  5 10308 1279
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (26.96s)
+PASS
+ok  	6.5840/kvraft	26.959s
+=== RUN   TestSnapshotUnreliableRecoverConcurrentPartition4B
+Test: unreliable net, restarts, partitions, snapshots, many clients (4B) ...
+labgob warning: Decoding into a non-default variable/field Err may not work
+  ... Passed --  27.4  5  9282 1196
+--- PASS: TestSnapshotUnreliableRecoverConcurrentPartition4B (27.45s)
+PASS
+ok  	6.5840/kvraft	27.452s
