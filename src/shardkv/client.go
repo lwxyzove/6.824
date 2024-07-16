@@ -60,7 +60,7 @@ func MakeClerk(ctrlers []*labrpc.ClientEnd, make_end func(string) *labrpc.Client
 	// You'll have to add code here.
 	ck.cid = nrand()
 	ck.config = ck.sm.Query(-1)
-	ck.opSequence = -1
+	ck.opSequence = 0
 	return ck
 }
 

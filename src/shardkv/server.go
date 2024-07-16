@@ -2,6 +2,7 @@ package shardkv
 
 import (
 	"bytes"
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -22,7 +23,11 @@ type Op struct {
 	Key        string
 	Value      string
 
-	Config *shardctrler.Config
+	Config        *shardctrler.Config
+	ConfigNum     int
+	ClientAck     map[int64]int
+	ShardsKvStore map[int]map[string]string
+	ShardIds      []int
 }
 
 type OpResult struct {
@@ -30,21 +35,16 @@ type OpResult struct {
 	Value string
 }
 
-type shard struct {
-	state   int
-	kvStore map[string]string
+type Shard struct {
+	State   int
+	KvStore map[string]string
 }
 
-func (s *shard) Get(key string) string  { return s.kvStore[key] }
-func (s *shard) Put(key, val string)    { s.kvStore[key] = val }
-func (s *shard) Append(key, val string) { s.kvStore[key] += val }
-func (s *shard) Copy() map[string]string {
-	cp := make(map[string]string, len(s.kvStore))
-	for k, v := range s.kvStore {
-		cp[k] = v
-	}
-	return cp
-}
+func (s *Shard) String() string          { return fmt.Sprintf("{state: %d, kvStore: %+v}", s.State, s.KvStore) }
+func (s *Shard) Get(key string) string   { return s.KvStore[key] }
+func (s *Shard) Put(key, val string)     { s.KvStore[key] = val }
+func (s *Shard) Append(key, val string)  { s.KvStore[key] += val }
+func (s *Shard) Copy() map[string]string { return mapCopy(s.KvStore) }
 
 type ShardKV struct {
 	mu           sync.Mutex
@@ -59,7 +59,7 @@ type ShardKV struct {
 	// Your definitions here.
 	dead        int32 // set by Kill()
 	persister   *raft.Persister
-	shards      map[int]*shard
+	shards      map[int]*Shard
 	sc          *shardctrler.Clerk
 	lastConf    shardctrler.Config
 	currentConf shardctrler.Config
@@ -71,9 +71,17 @@ type ShardKV struct {
 
 func (kv *ShardKV) Get(args *GetArgs, reply *GetReply) {
 	// Your code here.
+	defer func() {
+		DPrintf("[Group %d][Server %d] Get request args: %+v, reply: %+v", kv.gid, kv.me, *args, *reply)
+	}()
 	shardid := key2shard(args.Key)
 	kv.mu.Lock()
-	if _, ok := kv.shards[shardid]; !ok {
+	if kv.currentConf.Shards[shardid] != kv.gid {
+		reply.Err = ErrWrongGroup
+		kv.mu.Unlock()
+		return
+	}
+	if _, ok := kv.shards[shardid]; !ok || (kv.shards[shardid].State != Severing && kv.shards[shardid].State != Waiting) {
 		reply.Err = ErrWrongGroup
 		kv.mu.Unlock()
 		return
@@ -98,7 +106,6 @@ func (kv *ShardKV) Get(args *GetArgs, reply *GetReply) {
 	rc := kv.mAckCh[logIdx]
 	kv.mu.Unlock()
 
-	DPrintf("KVServer-%d Received Req Get %v, logIndex=%d", kv.me, args, logIdx)
 	select {
 	case res := <-rc:
 		kv.mu.Lock()
@@ -112,9 +119,17 @@ func (kv *ShardKV) Get(args *GetArgs, reply *GetReply) {
 
 func (kv *ShardKV) PutAppend(args *PutAppendArgs, reply *PutAppendReply) {
 	// Your code here.
+	defer func() {
+		DPrintf("[Group %d][Server %d] PutAppend request args: %+v, reply: %+v", kv.gid, kv.me, *args, *reply)
+	}()
 	shardid := key2shard(args.Key)
 	kv.mu.Lock()
-	if _, ok := kv.shards[shardid]; !ok {
+	if kv.currentConf.Shards[shardid] != kv.gid {
+		reply.Err = ErrWrongGroup
+		kv.mu.Unlock()
+		return
+	}
+	if _, ok := kv.shards[shardid]; !ok || (kv.shards[shardid].State != Severing && kv.shards[shardid].State != Waiting) {
 		reply.Err = ErrWrongGroup
 		kv.mu.Unlock()
 		return
@@ -128,7 +143,7 @@ func (kv *ShardKV) PutAppend(args *PutAppendArgs, reply *PutAppendReply) {
 		ClientId:   args.ClientId,
 		Key:        args.Key,
 		Value:      args.Value,
-		OpType:     OpPut,
+		OpType:     args.Op,
 		OpSequence: args.OpSequence,
 	})
 	if !isLeader {
@@ -142,8 +157,77 @@ func (kv *ShardKV) PutAppend(args *PutAppendArgs, reply *PutAppendReply) {
 	rc := kv.mAckCh[logIdx]
 	kv.mu.Unlock()
 
-	DPrintf("KVServer-%d Received Req Put %v, logIndex=%d", kv.me, args, logIdx)
+	select {
+	case res := <-rc:
+		kv.mu.Lock()
+		delete(kv.mAckCh, logIdx)
+		kv.mu.Unlock()
+		reply.Err = res.Error
+	case <-time.After(200 * time.Millisecond):
+		reply.Err = ErrTimeOut
+	}
+}
 
+func (kv *ShardKV) FetchKvStore(args *FetchRequst, reply *FetchReply) {
+
+	if _, isLeader := kv.rf.GetState(); !isLeader {
+		reply.Err = ErrWrongLeader
+		return
+	}
+
+	defer func() {
+		DPrintf("[Group %d][Server %d] FetchKvStore request args: %+v, reply: %+v", kv.gid, kv.me, *args, *reply)
+	}()
+
+	kv.mu.Lock()
+	defer kv.mu.Unlock()
+
+	if args.ConfigNum != kv.currentConf.Num {
+		reply.Err = ErrWorngConfigVer
+		return
+	}
+
+	shardsKvStore := map[int]map[string]string{}
+	for _, id := range args.ShardIds {
+		if kv.shards[id].State == Abandoning {
+			shardsKvStore[id] = kv.shards[id].Copy()
+		}
+	}
+	reply.Err = OK
+	reply.ConfigNum = kv.currentConf.Num
+	reply.ShardsKvStore = shardsKvStore
+	reply.ClientAcks = mapi64iCopy(kv.mAcks)
+}
+
+func (kv *ShardKV) MigrateOk(args *NotifyMigrateOkRequest, reply *NotifyMigrateOkReply) {
+
+	kv.mu.Lock()
+	if args.ConfigNum != kv.currentConf.Num {
+		kv.mu.Unlock()
+		reply.Err = ErrWorngConfigVer
+		return
+	}
+	kv.mu.Unlock()
+
+	logIdx, _, isLeader := kv.rf.Start(Op{
+		OpType:    OpErase,
+		ConfigNum: args.ConfigNum,
+		ShardIds:  args.ShardIds,
+	})
+	if !isLeader {
+		reply.Err = ErrWrongLeader
+		return
+	}
+	defer func() {
+		DPrintf("[Group %d][Server %d] MigrateOk request args: %+v, reply: %+v", kv.gid, kv.me, *args, *reply)
+	}()
+
+	kv.mu.Lock()
+	if _, ok := kv.mAckCh[logIdx]; !ok {
+		kv.mAckCh[logIdx] = make(chan OpResult)
+	}
+	rc := kv.mAckCh[logIdx]
+	kv.mu.Unlock()
 	select {
 	case res := <-rc:
 		kv.mu.Lock()
@@ -239,6 +323,7 @@ func StartServer(servers []*labrpc.ClientEnd, me int, persister *raft.Persister,
 	kv.make_end = make_end
 	kv.gid = gid
 	kv.ctrlers = ctrlers
+	kv.persister = persister
 
 	// Your initialization code here.
 
@@ -250,11 +335,15 @@ func StartServer(servers []*labrpc.ClientEnd, me int, persister *raft.Persister,
 	kv.sc = shardctrler.MakeClerk(ctrlers)
 	kv.mAcks = map[int64]int{}
 	kv.mAckCh = map[int]chan OpResult{}
+	kv.shards = map[int]*Shard{}
 	kv.parseSnapShot(persister.ReadSnapshot())
+
+	DPrintf("[Group %d][Server %d] start with snapShot lastApplied: %d, currentConf: %+v, currentShard: %+v", kv.gid, kv.me, kv.lastApplied, kv.currentConf, kv.shards)
 
 	go kv.Process()
 	go kv.loop(kv.updateConfig, 100*time.Millisecond)
 	go kv.loop(kv.migrateShards, 100*time.Millisecond)
+	go kv.loop(kv.notifyMigrate, 100*time.Millisecond)
 
 	return kv
 }
@@ -271,7 +360,7 @@ func (kv *ShardKV) loop(fn func(), t time.Duration) {
 func (kv *ShardKV) updateConfig() {
 	kv.mu.Lock()
 	for _, shard := range kv.shards {
-		if shard.state != Severing {
+		if shard.State != Severing {
 			kv.mu.Unlock()
 			return
 		}
@@ -284,14 +373,84 @@ func (kv *ShardKV) updateConfig() {
 	kv.mu.Unlock()
 	if nConf.Num == mConfNUm+1 {
 		kv.rf.Start(Op{OpType: OpConfig, Config: &nConf})
-		DPrintf("ShardKv: %d updating config: %+v", kv.me, nConf)
 	}
 }
 
-func (kv *ShardKV) migrateShards()
+func (kv *ShardKV) migrateShards() {
+	kv.mu.Lock()
+	groupShards := map[int][]int{}
+	for id, shard := range kv.shards {
+		if shard.State == Fetching {
+			lastOwnGroup := kv.lastConf.Shards[id]
+			groupShards[lastOwnGroup] = append(groupShards[lastOwnGroup], id)
+		}
+	}
+
+	var wg sync.WaitGroup
+	for gid, shardids := range groupShards {
+		wg.Add(1)
+		confNum := kv.currentConf.Num
+		servers := kv.lastConf.Groups[gid]
+		shardIds := shardids
+		go func() {
+			defer wg.Done()
+			for _, server := range servers {
+				shardOwner := kv.make_end(server)
+				args := FetchRequst{
+					ConfigNum: confNum,
+					ShardIds:  shardIds,
+				}
+				reply := FetchReply{}
+				if shardOwner.Call("ShardKV.FetchKvStore", &args, &reply) && reply.Err == OK {
+					kv.rf.Start(Op{OpType: OpMerge, ConfigNum: confNum, ShardsKvStore: reply.ShardsKvStore, ClientAck: reply.ClientAcks})
+					break
+				}
+			}
+		}()
+	}
+	kv.mu.Unlock()
+	wg.Wait()
+}
+
+func (kv *ShardKV) notifyMigrate() {
+	kv.mu.Lock()
+	groupShards := map[int][]int{}
+	for id, shard := range kv.shards {
+		if shard.State == Waiting {
+			lastOwnGroup := kv.lastConf.Shards[id]
+			groupShards[lastOwnGroup] = append(groupShards[lastOwnGroup], id)
+		}
+	}
+
+	var wg sync.WaitGroup
+	for gid, shardids := range groupShards {
+		wg.Add(1)
+		confNum := kv.currentConf.Num
+		servers := kv.lastConf.Groups[gid]
+		shardIds := shardids
+		go func() {
+			defer wg.Done()
+			for _, server := range servers {
+				shardOwner := kv.make_end(server)
+				args := NotifyMigrateOkRequest{
+					ConfigNum: confNum,
+					ShardIds:  shardIds,
+				}
+				reply := NotifyMigrateOkReply{}
+				if shardOwner.Call("ShardKV.MigrateOk", &args, &reply) && reply.Err == OK {
+					kv.rf.Start(Op{OpType: OpToServing, ConfigNum: confNum, ShardIds: args.ShardIds})
+					break
+				}
+			}
+		}()
+	}
+	kv.mu.Unlock()
+	wg.Wait()
+}
 
 func (kv *ShardKV) Process() {
-	for applyMsg := range kv.applyCh {
+	for !kv.killed() {
+		applyMsg := <-kv.applyCh
 		if applyMsg.CommandValid {
 			msg := applyMsg.Command.(Op)
 			kv.mu.Lock()
@@ -305,7 +464,14 @@ func (kv *ShardKV) Process() {
 				kv.ProcessClientRequest(&msg)
 			case OpConfig:
 				kv.ProcessConfigUpdate(&msg)
+			case OpMerge:
+				kv.ProcessKvStoreMerge(&msg)
+			case OpErase:
+				kv.ProcessKvStoreErase(&msg)
+			case OpToServing:
+				kv.ProcessShardServing(&msg)
 			}
+			// /	DPrintf("[Group %d][Server %d] Applys Op: %+v", kv.gid, kv.me, msg)
 			kv.trySnapShot()
 			kv.mu.Unlock()
 		} else if applyMsg.SnapshotValid {
@@ -321,9 +487,9 @@ func (kv *ShardKV) Process() {
 func (kv *ShardKV) ProcessClientRequest(op *Op) {
 	shardid := key2shard(op.Key)
 	reply := OpResult{Error: OK}
-	if shard, ok := kv.shards[shardid]; !ok || shard.state != Severing {
+	if shard, ok := kv.shards[shardid]; !ok || (shard.State != Severing && shard.State != Waiting) {
 		reply.Error = ErrWrongGroup
-	} else {
+	} else if kv.mAcks[op.ClientId] < op.OpSequence { //考虑clientAck未更新前相同消息进入raft层
 		switch op.OpType {
 		case OpPut:
 			shard.Put(op.Key, op.Value)
@@ -332,6 +498,10 @@ func (kv *ShardKV) ProcessClientRequest(op *Op) {
 		case OpGet:
 			reply.Value = shard.Get(op.Key)
 		}
+		kv.mAcks[op.ClientId] = max(kv.mAcks[op.ClientId], op.OpSequence)
+		if _, isLeader := kv.rf.GetState(); isLeader {
+			DPrintf("[Group %d][Server %d] shard %d info %+v, mAcks: %d, sequence: %d", kv.gid, kv.me, shardid, kv.shards[shardid], kv.mAcks[op.ClientId], op.OpSequence)
+		}
 	}
 
 	_, isLeader := kv.rf.GetState()
@@ -339,15 +509,115 @@ func (kv *ShardKV) ProcessClientRequest(op *Op) {
 	if isLeader && ok {
 		select {
 		case ackCh <- reply:
-			DPrintf("KVServer-%d Process Notify CkId=%d msg=%v logidx=%d", kv.me, op.ClientId, op, kv.lastApplied)
+		//	DPrintf("KVServer-%d Process Notify CkId=%d msg=%v logidx=%d", kv.me, op.ClientId, op, kv.lastApplied)
 		default: //do not wait in cass holding lock long time
-			DPrintf("KVServer-%d Notify CkId=%d msg=%v logidx=%d timeout", kv.me, op.ClientId, op, kv.lastApplied)
+			//	DPrintf("KVServer-%d Notify CkId=%d msg=%v logidx=%d timeout", kv.me, op.ClientId, op, kv.lastApplied)
 		}
 	}
 }
 
 func (kv *ShardKV) ProcessConfigUpdate(op *Op) {
-	nConf := op.Config
-	kv.lastConf, kv.currentConf = kv.currentConf, *nConf
+	defer func() {
+		DPrintf("[Group %d][Server %d] updating config: %+v from config: %+v", kv.gid, kv.me, kv.currentConf, kv.lastConf)
+	}()
+	if op.Config.Num != kv.currentConf.Num+1 {
+		return
+	}
+	kv.lastConf, kv.currentConf = kv.currentConf, *op.Config
+	adds, subs := kv.shardChanges()
+	for _, id := range adds {
+		if kv.lastConf.Num == 0 {
+			kv.shards[id] = &Shard{State: Severing, KvStore: map[string]string{}}
+		} else {
+			kv.shards[id] = &Shard{State: Fetching}
+		}
+	}
+	for _, id := range subs {
+		kv.shards[id].State = Abandoning
+	}
+}
 
+func (kv *ShardKV) shardChanges() ([]int, []int) {
+	new := []int{}
+	for shardid, gid := range kv.currentConf.Shards {
+		if gid == kv.gid {
+			new = append(new, shardid)
+		}
+	}
+	new = append(new, len(kv.currentConf.Shards))
+
+	last := []int{}
+	for shardid, gid := range kv.lastConf.Shards {
+		if gid == kv.gid {
+			last = append(last, shardid)
+		}
+	}
+	last = append(last, len(kv.currentConf.Shards))
+
+	var adds, subs []int
+	for i, j := 0, 0; i < len(new) && j < len(last); {
+		if new[i] == last[j] {
+			i, j = i+1, j+1
+		}
+		for ; i < len(new) && new[i] < last[j]; i++ {
+			adds = append(adds, new[i])
+		}
+		for ; j < len(last) && last[j] < new[i]; j++ {
+			subs = append(subs, last[j])
+		}
+	}
+	return adds, subs
+}
+
+func (kv *ShardKV) ProcessKvStoreMerge(op *Op) {
+	if op.ConfigNum != kv.currentConf.Num {
+		return
+	}
+	defer func() {
+		DPrintf("[Group %d][Server %d] Config.Num: %d merged op: %+v", kv.gid, kv.me, kv.currentConf.Num, op)
+	}()
+	for shardid, kvstore := range op.ShardsKvStore {
+		if kv.shards[shardid].State == Fetching {
+			kv.shards[shardid].KvStore = mapCopy(kvstore)
+			kv.shards[shardid].State = Waiting
+		}
+	}
+	for cid, ack := range op.ClientAck {
+		kv.mAcks[cid] = max(kv.mAcks[cid], ack)
+	}
+}
+
+func (kv *ShardKV) ProcessKvStoreErase(op *Op) {
+	reply := OpResult{Error: OK}
+	if op.ConfigNum != kv.currentConf.Num {
+		reply.Error = ErrWorngConfigVer
+		return
+	}
+	for _, shardid := range op.ShardIds {
+		if kv.shards[shardid] == nil || kv.shards[shardid].State == Abandoning {
+			delete(kv.shards, shardid)
+		}
+	}
+
+	_, isLeader := kv.rf.GetState()
+	ackCh, ok := kv.mAckCh[kv.lastApplied]
+	if isLeader && ok {
+		select {
+		case ackCh <- reply:
+		//	DPrintf("KVServer-%d Process Notify CkId=%d msg=%v logidx=%d", kv.me, op.ClientId, op, kv.lastApplied)
+		default: //do not wait in cass holding lock long time
+			//	DPrintf("KVServer-%d Notify CkId=%d msg=%v logidx=%d timeout", kv.me, op.ClientId, op, kv.lastApplied)
+		}
+	}
+}
+
+func (kv *ShardKV) ProcessShardServing(op *Op) {
+	if op.ConfigNum != kv.currentConf.Num {
+		return
+	}
+	for _, shardid := range op.ShardIds {
+		if kv.shards[shardid].State == Waiting {
+			kv.shards[shardid].State = Severing
+		}
+	}
 }
