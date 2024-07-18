@@ -23,7 +23,7 @@ type Op struct {
 	Key        string
 	Value      string
 
-	Config        *shardctrler.Config
+	Config        shardctrler.Config
 	ConfigNum     int
 	ClientAck     map[int64]int
 	ShardsKvStore map[int]map[string]string
@@ -40,7 +40,7 @@ type Shard struct {
 	KvStore map[string]string
 }
 
-func (s *Shard) String() string          { return fmt.Sprintf("{state: %d, kvStore: %+v}", s.State, s.KvStore) }
+func (s *Shard) String() string          { return fmt.Sprintf("{state: %d}", s.State) }
 func (s *Shard) Get(key string) string   { return s.KvStore[key] }
 func (s *Shard) Put(key, val string)     { s.KvStore[key] = val }
 func (s *Shard) Append(key, val string)  { s.KvStore[key] += val }
@@ -175,12 +175,12 @@ func (kv *ShardKV) FetchKvStore(args *FetchRequst, reply *FetchReply) {
 		return
 	}
 
-	defer func() {
-		DPrintf("[Group %d][Server %d] FetchKvStore request args: %+v, reply: %+v", kv.gid, kv.me, *args, *reply)
-	}()
-
 	kv.mu.Lock()
 	defer kv.mu.Unlock()
+
+	defer func() {
+		DPrintf("[Group %d][Server %d] FetchKvStore request args: %+v, reply: %+v, mConfigNum: %d, shards: %+v", kv.gid, kv.me, *args, *reply, kv.currentConf.Num, kv.shards)
+	}()
 
 	if args.ConfigNum != kv.currentConf.Num {
 		reply.Err = ErrWorngConfigVer
@@ -202,9 +202,14 @@ func (kv *ShardKV) FetchKvStore(args *FetchRequst, reply *FetchReply) {
 func (kv *ShardKV) MigrateOk(args *NotifyMigrateOkRequest, reply *NotifyMigrateOkReply) {
 
 	kv.mu.Lock()
-	if args.ConfigNum != kv.currentConf.Num {
+	if args.ConfigNum > kv.currentConf.Num {
 		kv.mu.Unlock()
 		reply.Err = ErrWorngConfigVer
+		return
+	}
+	if args.ConfigNum < kv.currentConf.Num { // maybe last notify result was lost
+		kv.mu.Unlock()
+		reply.Err = OK
 		return
 	}
 	kv.mu.Unlock()
@@ -218,10 +223,10 @@ func (kv *ShardKV) MigrateOk(args *NotifyMigrateOkRequest, reply *NotifyMigrateO
 		reply.Err = ErrWrongLeader
 		return
 	}
+
 	defer func() {
 		DPrintf("[Group %d][Server %d] MigrateOk request args: %+v, reply: %+v", kv.gid, kv.me, *args, *reply)
 	}()
-
 	kv.mu.Lock()
 	if _, ok := kv.mAckCh[logIdx]; !ok {
 		kv.mAckCh[logIdx] = make(chan OpResult)
@@ -247,6 +252,7 @@ func (kv *ShardKV) snapShot() []byte {
 	e.Encode(kv.lastApplied)
 	e.Encode(kv.lastConf)
 	e.Encode(kv.currentConf)
+	DPrintf("[Group %d][Server %d] generate snapShot, lastApplied: %d, conf: %+v, shard: %+v", kv.gid, kv.me, kv.lastApplied, kv.currentConf, kv.shards)
 	return w.Bytes()
 }
 
@@ -254,11 +260,13 @@ func (kv *ShardKV) parseSnapShot(snapShot []byte) {
 	if len(snapShot) != 0 {
 		r := bytes.NewBuffer(snapShot)
 		e := labgob.NewDecoder(r)
+		kv.shards = map[int]*Shard{}
 		e.Decode(&kv.shards)
 		e.Decode(&kv.mAcks)
 		e.Decode(&kv.lastApplied)
 		e.Decode(&kv.lastConf)
 		e.Decode(&kv.currentConf)
+		DPrintf("[Group %d][Server %d] parse from snapShot, lastApplied: %d, conf: %+v, shard: %+v", kv.gid, kv.me, kv.lastApplied, kv.currentConf, kv.shards)
 	}
 }
 
@@ -343,7 +351,8 @@ func StartServer(servers []*labrpc.ClientEnd, me int, persister *raft.Persister,
 	go kv.Process()
 	go kv.loop(kv.updateConfig, 100*time.Millisecond)
 	go kv.loop(kv.migrateShards, 100*time.Millisecond)
-	go kv.loop(kv.notifyMigrate, 100*time.Millisecond)
+	go kv.loop(kv.notifyMigrateDone, 100*time.Millisecond)
+	go kv.loop(kv.tryNoOpLog, 100*time.Millisecond)
 
 	return kv
 }
@@ -372,7 +381,7 @@ func (kv *ShardKV) updateConfig() {
 	mConfNUm := kv.currentConf.Num
 	kv.mu.Unlock()
 	if nConf.Num == mConfNUm+1 {
-		kv.rf.Start(Op{OpType: OpConfig, Config: &nConf})
+		kv.rf.Start(Op{OpType: OpConfig, Config: nConf})
 	}
 }
 
@@ -412,7 +421,7 @@ func (kv *ShardKV) migrateShards() {
 	wg.Wait()
 }
 
-func (kv *ShardKV) notifyMigrate() {
+func (kv *ShardKV) notifyMigrateDone() {
 	kv.mu.Lock()
 	groupShards := map[int][]int{}
 	for id, shard := range kv.shards {
@@ -448,6 +457,12 @@ func (kv *ShardKV) notifyMigrate() {
 	wg.Wait()
 }
 
+func (kv *ShardKV) tryNoOpLog() {
+	if !kv.rf.HasLogCurTerm() {
+		kv.rf.Start(Op{})
+	}
+}
+
 func (kv *ShardKV) Process() {
 	for !kv.killed() {
 		applyMsg := <-kv.applyCh
@@ -471,7 +486,7 @@ func (kv *ShardKV) Process() {
 			case OpToServing:
 				kv.ProcessShardServing(&msg)
 			}
-			// /	DPrintf("[Group %d][Server %d] Applys Op: %+v", kv.gid, kv.me, msg)
+			//	DPrintf("[Group %d][Server %d] Applys Op: %+v", kv.gid, kv.me, msg)
 			kv.trySnapShot()
 			kv.mu.Unlock()
 		} else if applyMsg.SnapshotValid {
@@ -489,7 +504,7 @@ func (kv *ShardKV) ProcessClientRequest(op *Op) {
 	reply := OpResult{Error: OK}
 	if shard, ok := kv.shards[shardid]; !ok || (shard.State != Severing && shard.State != Waiting) {
 		reply.Error = ErrWrongGroup
-	} else if kv.mAcks[op.ClientId] < op.OpSequence { //考虑clientAck未更新前相同消息进入raft层
+	} else if kv.mAcks[op.ClientId] < op.OpSequence || op.OpType == OpGet { //考虑clientAck未更新前相同消息进入raft层
 		switch op.OpType {
 		case OpPut:
 			shard.Put(op.Key, op.Value)
@@ -499,9 +514,9 @@ func (kv *ShardKV) ProcessClientRequest(op *Op) {
 			reply.Value = shard.Get(op.Key)
 		}
 		kv.mAcks[op.ClientId] = max(kv.mAcks[op.ClientId], op.OpSequence)
-		if _, isLeader := kv.rf.GetState(); isLeader {
-			DPrintf("[Group %d][Server %d] shard %d info %+v, mAcks: %d, sequence: %d", kv.gid, kv.me, shardid, kv.shards[shardid], kv.mAcks[op.ClientId], op.OpSequence)
-		}
+		// if _, isLeader := kv.rf.GetState(); isLeader {
+		// 	DPrintf("[Group %d][Server %d] shard %d info %+v, mAcks: %d, sequence: %d", kv.gid, kv.me, shardid, kv.shards[shardid], kv.mAcks[op.ClientId], op.OpSequence)
+		// }
 	}
 
 	_, isLeader := kv.rf.GetState()
@@ -517,13 +532,13 @@ func (kv *ShardKV) ProcessClientRequest(op *Op) {
 }
 
 func (kv *ShardKV) ProcessConfigUpdate(op *Op) {
-	defer func() {
-		DPrintf("[Group %d][Server %d] updating config: %+v from config: %+v", kv.gid, kv.me, kv.currentConf, kv.lastConf)
-	}()
 	if op.Config.Num != kv.currentConf.Num+1 {
 		return
 	}
-	kv.lastConf, kv.currentConf = kv.currentConf, *op.Config
+	defer func() {
+		DPrintf("[Group %d][Server %d] updating config: %+v from config: %+v, shards: %+v", kv.gid, kv.me, kv.currentConf, kv.lastConf, kv.shards)
+	}()
+	kv.lastConf, kv.currentConf = kv.currentConf, op.Config
 	adds, subs := kv.shardChanges()
 	for _, id := range adds {
 		if kv.lastConf.Num == 0 {
@@ -589,7 +604,12 @@ func (kv *ShardKV) ProcessKvStoreMerge(op *Op) {
 
 func (kv *ShardKV) ProcessKvStoreErase(op *Op) {
 	reply := OpResult{Error: OK}
-	if op.ConfigNum != kv.currentConf.Num {
+	defer func() {
+		DPrintf("[Group %d][Server %d] Config.Num: %d KvStoreErase op: %+v, result: %+v", kv.gid, kv.me, kv.currentConf.Num, op, reply)
+	}()
+	if op.ConfigNum < kv.currentConf.Num {
+		return
+	} else if op.ConfigNum > kv.currentConf.Num {
 		reply.Error = ErrWorngConfigVer
 		return
 	}
