@@ -260,7 +260,7 @@ func (kv *ShardKV) parseSnapShot(snapShot []byte) {
 	if len(snapShot) != 0 {
 		r := bytes.NewBuffer(snapShot)
 		e := labgob.NewDecoder(r)
-		kv.shards = map[int]*Shard{}
+		kv.shards = map[int]*Shard{} // needed, incase Leader's snapShot removed one shard but this follower havn't. Then after unmarshal the shard still exist in shards map
 		e.Decode(&kv.shards)
 		e.Decode(&kv.mAcks)
 		e.Decode(&kv.lastApplied)
